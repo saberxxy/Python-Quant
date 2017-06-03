@@ -1,11 +1,13 @@
-#-*- coding=utf-8 -*-
+# -*- coding=utf-8 -*-
+# 获取上市公司信息
 
 import tushare as ts
 import cx_Oracle as cxo
 import configparser
+from pypinyin import pinyin
+import pypinyin
 
 
-# 获取数据
 def getBasics(cursor):
     df = ts.get_stock_basics()
 
@@ -32,6 +34,8 @@ def getBasics(cursor):
     stockGpr = list(df['gpr'])  #毛利率(%)
     stockNpr = list(df['npr'])  #净利润率(%)
     stockHolders = list(df['holders'])  #股东人数
+
+    # print(pinyin(stockName))
     print("已获取数据")
     # str1 = str(stockTimeToMarket[0])
     # print(str1[0:4])
@@ -65,22 +69,27 @@ def getBasics(cursor):
         stockNprDB = round(float(stockNpr[i]), 4)
         stockHoldersDB = round(float(stockHolders[i]), 4)
 
+        a = str(pinyin(stockNameDB, style=pypinyin.FIRST_LETTER))
+        stockTableNameDB = "".join(a).replace('[', '').replace(']', '').replace("'", '').replace(',', '').\
+                    replace(' ', '').replace('*', '').upper() + stockCodeDB
+        # print(stockTableNameDB)
+
         # print(stockTimeToMarket[i])
         # print(timeToMarketDB)
-
+    #
         try:
             cursor.execute("insert into stock_basics(code, name, industry, area, pe, outstanding, "
                        "totals, totalAssets, liquidAssets, fixedAssets, reserved, "
                        "reservedPerShare, esp, bvps, pb, timeToMarket, undp, "
-                       "perundp, rev, profit, gpr, npr, holders)"
+                       "perundp, rev, profit, gpr, npr, holders, tablename)"
                        "values('%s', '%s', '%s', '%s', '%f', '%f', "
                        "'%f', '%f', '%f', '%f', '%f', "
                        "'%f', '%f', '%f', '%f', to_date('%s', 'yyyy-MM-dd'), '%f', "
-                       "'%f', '%f', '%f', '%f', '%f', '%f')"
+                       "'%f', '%f', '%f', '%f', '%f', '%f', '%s')"
                        % (stockCodeDB, stockNameDB, stockIndustryDB, stockAreaDB, stockPeDB, stockOutstandingDB,
                         stockTotalsDB, stockTotalAssetsDB, stockLiquidAssetsDB, stockFixedAssetsDB, stockReservedDB,
                         stockReservedPerShareDB, stockEspDB, stockBvpsDB, stockPbDB, timeToMarketDB, stockUndpDB,
-                        stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB))
+                        stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB, stockTableNameDB))
             cursor.execute("commit")
             print("已存入  ", i)
         except Exception:

@@ -37,7 +37,8 @@ rev number(20, 4),
 profit number(20, 4),
 gpr number(20, 4),
 npr number(20, 4),
-holders number(20, 4)
+holders number(20, 4),
+tablename varchar2(20)
 );
 
 comment on table stock_basics is '上市公司基本信息表';
@@ -64,6 +65,7 @@ comment on column stock_basics.profit is '利润同比(%)';
 comment on column stock_basics.gpr is '毛利率(%)';
 comment on column stock_basics.npr is '净利润率(%)';
 comment on column stock_basics.holders is '股东人数';
+comment on column stock_basics.tablename is '存储该股票涨跌信息的表名';
 
 
 

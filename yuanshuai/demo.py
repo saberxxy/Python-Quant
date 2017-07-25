@@ -9,16 +9,20 @@ from pandas import DataFrame, Series
 # name = data[data.index=='000001'].name
 # print(type(name[0]))
 
-# data = ts.get_stock_basics()
-# df = data[data.index == '000001'].name
-# data.name = df
-# print(df)
 
+# data = ts.get_stock_basics()
+    # df = data[data.index == '000001'].name
+    #
+    # data.name=df
+    # print(df)
 def main():
     df = ts.get_h_data('000001', start='2017-01-01')
-    for i in range(df.shape[0]):
-        print(df.iloc[i], type(df.iloc[i].index))
-        print("----------------------------------")
+    # for i in df.index:
+    #     print(i, type(i))
+
+    for j in range(df.shape[0]):
+        print(df.iloc[j], type(df.iloc[j]))
+
 if __name__ == '__main__':
     main()
 

@@ -32,3 +32,31 @@ COMMENT ON COLUMN STOCK_000001.AMOUNT IS '成交金额';
 COMMENT ON COLUMN STOCK_000001.Y_CLOSE IS '昨收盘';
 COMMENT ON COLUMN STOCK_000001.P_CHANGE IS '涨跌额';
 COMMENT ON COLUMN STOCK_000001.P_CHANGE_RATE IS '涨跌幅';
+
+
+# 上市公司基本信息表创建脚本
+CREATE TABLE "YS"."STOCK_BASICS"
+   ("CODE" VARCHAR2(10) PRIMARY KEY,  --股票代码
+	"NAME" VARCHAR2(50),  --股票名称
+	"INDUSTRY" VARCHAR2(50),  --所属产业
+	"AREA" VARCHAR2(50),  --地区
+	"PE" NUMBER(20,4),  --市盈率
+	"OUTSTANDING" NUMBER(20,4),  --流通股本（亿）
+	"TOTALS" NUMBER(20,4),  --总股本（亿）
+	"TOTALASSETS" NUMBER(20,4),  --总资产（亿）
+	"LIQUIDASSETS" NUMBER(20,4),  --流动资产（亿）
+	"FIXEDASSETS" NUMBER(20,4),  --固定资产（亿）
+	"RESERVED" NUMBER(20,4),  --公积金
+	"RESERVEDPERSHARE" NUMBER(20,4),  --每股公积金
+	"ESP" NUMBER(20,4),  --每股收益
+	"BVPS" NUMBER(20,4),  --每股净资
+	"PB" NUMBER(20,4),  --市净率
+	"TIMETOMARKET" DATE,  --上市日期
+	"UNDP" NUMBER(20,4),  -- 未分利润
+	"PERUNDP" NUMBER(20,4),  --每股未分配
+	"REV" NUMBER(20,4),  --收入同比（%）
+	"PROFIT" NUMBER(20,4),  --利润同比（%）
+	"GPR" NUMBER(20,4),  --毛利率（%）
+	"NPR" NUMBER(20,4),  --净利润率（%）
+	"HOLDERS" NUMBER(20,4),  --股东人数
+	)

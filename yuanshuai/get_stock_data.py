@@ -22,6 +22,7 @@ def get_name(code):
     :param code:
     :return:
     """
+    # TODO: 查表代替执行方法
     data = ts.get_stock_basics()
     name = data[data.index == code].name
     return name[0]

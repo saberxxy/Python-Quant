@@ -10,8 +10,9 @@ def format_data(raw_data):
     data['code'] = code
     data['name'] = gsd.get_name(code)
     data['industry'] = gsd.get_industry(code)
+    data['classify'] = gsd.get_type(code)
     # 添加一些列
-    data = DataFrame(data, columns=['uuid', 'date', 'code', 'name', 'open', 'close', 'high', 'low', 'volume', 'amount', \
+    data = DataFrame(data, columns=['uuid', 'date', 'code', 'name', 'industry', 'classify', 'open', 'close', 'high', 'low', 'volume', 'amount', \
                                     'y_close', 'p_change', 'p_changerate'])
     close_p = data['close']  # 收盘
     data['y_close'] = close_p.shift(-1)  # 昨收盘
@@ -22,6 +23,7 @@ def format_data(raw_data):
         # data.code = code  # 股票代码
         data.loc[i, 'p_change'] = data.loc[i, 'close'] - data.loc[i, 'y_close']  # 涨跌额
         data.loc[i, 'p_changerate'] = data.loc[i, 'p_change'] / data.loc[i, 'y_close']  # 涨跌幅
+        i = data.loc[i, 'uuid']
     return data
 
 

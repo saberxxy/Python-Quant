@@ -29,8 +29,29 @@ import cx_Oracle
 # tns = cx_Oracle.makedsn('localhost', 1521, 'orcl')
 # conn = cx_Oracle.connect('stock', '123456', tns)
 # print(conn.version)
+
 def main():
-    pass
+    stock_code="600848"
+    sql = "CREATE TABLE "+stock_code+"""
+        (
+                UUID VARCHAR2(80) PRIMARY KEY,
+                DATETIME DATE NOT NULL,
+                CODE VARCHAR2(20),
+                C_NAME VARCHAR2(80),
+                INDUSTRY VARCHAR2(80),
+                CLASSIFY VARCHAR(80),
+                OPEN NUMBER(20, 2),
+                CLOSE NUMBER(20, 2),
+                HIGH NUMBER(20, 2),
+                LOW NUMBER(20, 2),
+                VOLUME NUMBER(20, 1),
+                AMOUNT NUMBER(20, 1),
+                Y_CLOSE NUMBER(20, 2),
+                P_CHANGE NUMBER(20, 2),
+                P_CHANGE_RATE NUMBER(20, 6)
+            )
+        """
+    print(sql)
 if __name__ == '__main__':
     main()
 

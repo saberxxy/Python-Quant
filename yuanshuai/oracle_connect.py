@@ -14,7 +14,7 @@ def conn(username='stock', password='123456', host='localhost', port=1521, sid='
     return cursor
 
 
-def create_table(*args, **kwargs):
+def create_table(stock_code):
     """
     创建空表
     :param args:
@@ -22,8 +22,8 @@ def create_table(*args, **kwargs):
     :return:
     """
     cursor = conn()
-    sql = """
-    CREATE TABLE "STOCK_000001"(
+    sql = "CREATE TABLE STOCK_"+stock_code+"""
+    (
             UUID VARCHAR2(80) PRIMARY KEY,
             DATETIME DATE NOT NULL,
             CODE VARCHAR2(20),
@@ -43,24 +43,33 @@ def create_table(*args, **kwargs):
     """
     print(sql)
     cursor.execute(sql)
-    comments = ["COMMENT ON TABLE STOCK_000001 IS '平安银行'",
-                "COMMENT ON COLUMN STOCK_000001.UUID IS 'UUID'",
-                "COMMENT ON COLUMN STOCK_000001.DATETIME IS '日期'",
-                "COMMENT ON COLUMN STOCK_000001.CODE IS '股票代码'",
-                "COMMENT ON COLUMN STOCK_000001.C_NAME IS '股票名称'",
-                "COMMENT ON COLUMN STOCK_000001.INDUSTRY IS '所属行业'",
-                "COMMENT ON COLUMN STOCK_000001.CLASSIFY IS '类别'",
-                "COMMENT ON COLUMN STOCK_000001.OPEN IS '开盘价'",
-                "COMMENT ON COLUMN STOCK_000001.CLOSE IS '收盘价'",
-                "COMMENT ON COLUMN STOCK_000001.HIGH IS '最高价'",
-                "COMMENT ON COLUMN STOCK_000001.LOW IS '最低价'",
-                "COMMENT ON COLUMN STOCK_000001.VOLUME IS '成交量'",
-                "COMMENT ON COLUMN STOCK_000001.AMOUNT IS '成交金额'",
-                "COMMENT ON COLUMN STOCK_000001.Y_CLOSE IS '昨收盘'",
-                "COMMENT ON COLUMN STOCK_000001.P_CHANGE IS '涨跌额'",
-                "COMMENT ON COLUMN STOCK_000001.P_CHANGE_RATE IS '涨跌幅'"]
+    comments = ["COMMENT ON TABLE STOCK_"+stock_code+" IS '平安银行'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".UUID IS 'UUID'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".DATETIME IS '日期'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".CODE IS '股票代码'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".C_NAME IS '股票名称'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".INDUSTRY IS '所属行业'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".CLASSIFY IS '类别'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".OPEN IS '开盘价'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".CLOSE IS '收盘价'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".HIGH IS '最高价'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".LOW IS '最低价'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".VOLUME IS '成交量'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".AMOUNT IS '成交金额'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".Y_CLOSE IS '昨收盘'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".P_CHANGE IS '涨跌额'",
+                "COMMENT ON COLUMN STOCK_"+stock_code+".P_CHANGE_RATE IS '涨跌幅'"]
     for i in comments:
+        print(i)
         cursor.execute(i)
+
+
+def insert_data():
+    pass
+
+
+def query_columns():
+    pass
 
 
 def all_company():
@@ -158,8 +167,8 @@ def all_company():
 
 
 def main():
-    # create_table('000001')
-    all_company()
+    create_table('000004')
+    # all_company()
 
 if __name__=='__main__':
     main()

@@ -68,9 +68,10 @@ def insert_data():
     pass
 
 
-def query_columns():
-    pass
-
+def query_columns(table, *columns):
+    for i in columns:
+        print(i)
+    print(table)
 
 def all_company():
     """
@@ -167,8 +168,9 @@ def all_company():
 
 
 def main():
-    create_table('000004')
+    # create_table('000004')
     # all_company()
+    query_columns('000001', ('name', 'age', 'tel'))
 
 if __name__=='__main__':
     main()

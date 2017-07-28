@@ -35,14 +35,12 @@ def getBasics(cursor):
     stockNpr = list(df['npr'])  #净利润率(%)
     stockHolders = list(df['holders'])  #股东人数
 
-    # print(pinyin(stockName))
     print("已获取数据")
-    # str1 = str(stockTimeToMarket[0])
-    # print(str1[0:4])
 
     dfLen = len(df)
 
-    #print(time.strptime(stockTimeToMarket[1], "%Y%m%d"))
+    cursor.execute("truncate table stock_basics")
+    print("表已截断")
 
     for i in range(0, dfLen):
         stockCodeDB = str(stockCode[i])
@@ -69,27 +67,19 @@ def getBasics(cursor):
         stockNprDB = round(float(stockNpr[i]), 4)
         stockHoldersDB = round(float(stockHolders[i]), 4)
 
-        a = str(pinyin(stockNameDB, style=pypinyin.FIRST_LETTER))
-        stockTableNameDB = "".join(a).replace('[', '').replace(']', '').replace("'", '').replace(',', '').\
-                    replace(' ', '').replace('*', '').upper() + stockCodeDB
-        # print(stockTableNameDB)
-
-        # print(stockTimeToMarket[i])
-        # print(timeToMarketDB)
-    #
         try:
             cursor.execute("insert into stock_basics(code, name, industry, area, pe, outstanding, "
                        "totals, totalAssets, liquidAssets, fixedAssets, reserved, "
                        "reservedPerShare, esp, bvps, pb, timeToMarket, undp, "
-                       "perundp, rev, profit, gpr, npr, holders, tablename)"
+                       "perundp, rev, profit, gpr, npr, holders)"
                        "values('%s', '%s', '%s', '%s', '%f', '%f', "
                        "'%f', '%f', '%f', '%f', '%f', "
                        "'%f', '%f', '%f', '%f', to_date('%s', 'yyyy-MM-dd'), '%f', "
-                       "'%f', '%f', '%f', '%f', '%f', '%f', '%s')"
+                       "'%f', '%f', '%f', '%f', '%f', '%f')"
                        % (stockCodeDB, stockNameDB, stockIndustryDB, stockAreaDB, stockPeDB, stockOutstandingDB,
                         stockTotalsDB, stockTotalAssetsDB, stockLiquidAssetsDB, stockFixedAssetsDB, stockReservedDB,
                         stockReservedPerShareDB, stockEspDB, stockBvpsDB, stockPbDB, timeToMarketDB, stockUndpDB,
-                        stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB, stockTableNameDB))
+                        stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB))
             cursor.execute("commit")
             print("已存入  ", i)
         except Exception:
@@ -110,9 +100,6 @@ def getConfig():
     cursor = conn.cursor()
     print("已获取数据库连接")
     return cursor
-    # cursor.execute("select * from stock_basics")
-    # row = cursor.fetchone()
-    # print(row)
 
 
 def main():

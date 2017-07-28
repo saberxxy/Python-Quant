@@ -39,9 +39,6 @@ def getBasics(cursor):
 
     dfLen = len(df)
 
-    cursor.execute("truncate table stock_basics")
-    print("表已截断")
-
     for i in range(0, dfLen):
         stockCodeDB = str(stockCode[i])
         stockNameDB = str(stockName[i])
@@ -80,10 +77,13 @@ def getBasics(cursor):
                         stockTotalsDB, stockTotalAssetsDB, stockLiquidAssetsDB, stockFixedAssetsDB, stockReservedDB,
                         stockReservedPerShareDB, stockEspDB, stockBvpsDB, stockPbDB, timeToMarketDB, stockUndpDB,
                         stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB))
-            cursor.execute("commit")
+            # cursor.execute("commit")
             print("已存入  ", i)
         except Exception:
             pass
+
+    # 批量提交
+    cursor.execute("commit")
 
 
 # 获取数据库连接
@@ -101,10 +101,20 @@ def getConfig():
     print("已获取数据库连接")
     return cursor
 
+# 检查表中是否存在数据
+def haveData(cursor):
+    cursor.execute("select count(1) from stock_basics")
+    pdata = cursor.fetchone()
+    return pdata[0]
 
 def main():
     cursor = getConfig()
-    getBasics(cursor)
+    pdata = haveData(cursor)
+    if pdata == 0:
+        getBasics(cursor)
+    else:
+        cursor.execute("truncate table stock_basics")
+        getBasics(cursor)
 
 
 if __name__ == '__main__':

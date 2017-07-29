@@ -66,4 +66,38 @@ comment on column stock_basics.npr is '净利润率(%)';
 comment on column stock_basics.holders is '股东人数';
 
 
+--获取业绩报告
+create table stock_report
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+esp number(20, 4),
+eps_yoy number(20, 4),
+bvps number(20, 4),
+roe number(20, 4),
+epcf number(20, 4),
+net_profits number(20, 4),
+profits_yoy number(20, 4),
+distrib varchar2(50),
+report_date date,
+year varchar2(5),
+quarter varchar2(2)
+);
+comment on table stock_report is '业绩报告表';
+comment on column stock_report.uuid is '主键';
+comment on column stock_report.code is '代码';
+comment on column stock_report.name is '名称';
+comment on column stock_report.esp is '每股收益';
+comment on column stock_report.eps_yoy is '每股收益同比(%)';
+comment on column stock_report.bvps is '每股净资产';
+comment on column stock_report.roe is '净资产收益率(%)';
+comment on column stock_report.epcf is '每股现金流量(元)';
+comment on column stock_report.net_profits is '净利润(万元)';
+comment on column stock_report.profits_yoy is '净利润同比(%)';
+comment on column stock_report.distrib is '分配方案';
+comment on column stock_report.report_date is '发布日期';
+comment on column stock_report.year is '年份';
+comment on column stock_report.quarter is '季度';
+
+
 

@@ -100,4 +100,32 @@ comment on column stock_report.year is '年份';
 comment on column stock_report.quarter is '季度';
 
 
+--获取盈利能力
+create table stock_profit
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+roe number(20, 4),
+net_profit_ratio number(20, 4),
+gross_profit_rate number(20, 4),
+net_profits number(20, 4),
+eps number(20, 4),
+business_income number(20, 4),
+bips number(20, 4),
+year varchar2(5),
+quarter varchar2(2)
+);
+comment on table stock_profit is '盈利能力表';
+comment on column stock_profit.uuid is '主键';
+comment on column stock_profit.code is '代码';
+comment on column stock_profit.name is '名称';
+comment on column stock_profit.roe is '净资产收益率(%)';
+comment on column stock_profit.net_profit_ratio is '净利率(%)';
+comment on column stock_profit.gross_profit_rate is '毛利率(%)';
+comment on column stock_profit.net_profits is '净利润(万元)';
+comment on column stock_profit.eps is '每股收益';
+comment on column stock_profit.business_income is '营业收入(百万元)';
+comment on column stock_profit.bips is '每股主营业务收入(元)';
+comment on column stock_profit.year is '年份';
+comment on column stock_profit.quarter is '季度';
 

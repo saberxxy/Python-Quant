@@ -129,3 +129,31 @@ comment on column stock_profit.bips is '每股主营业务收入(元)';
 comment on column stock_profit.year is '年份';
 comment on column stock_profit.quarter is '季度';
 
+
+--获取运营能力
+create table stock_operation
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+arturnover number(20, 4),
+arturndays number(20, 4),
+inventory_turnover number(20, 4),
+inventory_days number(20, 4),
+currentasset_turnover number(20, 4),
+currentasset_days number(20, 4),
+year varchar2(5),
+quarter varchar2(2)
+);
+comment on table stock_operation is '运营能力表';
+comment on column stock_operation.uuid is '主键';
+comment on column stock_operation.code is '代码';
+comment on column stock_operation.name is '名称';
+comment on column stock_operation.arturnover is '应收账款周转率(次)';
+comment on column stock_operation.arturndays is '应收账款周转天数(天)';
+comment on column stock_operation.inventory_turnover is '存货周转率(次)';
+comment on column stock_operation.inventory_days is '存货周转天数(天)';
+comment on column stock_operation.currentasset_turnover is '流动资产周转率(次)';
+comment on column stock_operation.currentasset_days is '流动资产周转天数(天)';
+comment on column stock_operation.year is '年份';
+comment on column stock_operation.quarter is '季度';
+

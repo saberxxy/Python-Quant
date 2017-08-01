@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import cx_Oracle
 import get_stock_data as gsd
+import format_stock_data as fsd
 from pypinyin import pinyin
 import pypinyin
 
@@ -8,27 +9,27 @@ import pypinyin
 # 连接数据库
 def conn(username='stock', password='123456', host='localhost', port=1521, sid='orcl'):
     tns = cx_Oracle.makedsn(host, port, sid)
-    conn = cx_Oracle.connect(username, password, tns)  # 连接数据库
-    print('connect successfully! the Oracle version:', conn.version)  # 打印版本号
-    cursor = conn.cursor()  # 创建cursor
-    return cursor
+    con = cx_Oracle.connect(username, password, tns)  # 连接数据库
+    print('connect successfully! the Oracle version:', con.version)  # 打印版本号
+    # cursor = conn.cursor()  # 创建cursor
+    # return cursor
+    return con
 
 
+# 建表
 def create_table(stock_code):
     """
     创建空表
-    :param args:
-    :param kwargs:
+    :param stock_code:股票代码
     :return:
     """
     cursor = conn()
-    sql = "CREATE TABLE STOCK_"+stock_code+"""
+    sql = "CREATE TABLE STOCK_" + stock_code + """
     (
             UUID VARCHAR2(80) PRIMARY KEY,
             DATETIME DATE NOT NULL,
             CODE VARCHAR2(20),
             C_NAME VARCHAR2(80),
-            INDUSTRY VARCHAR2(80),
             CLASSIFY VARCHAR(80),
             OPEN NUMBER(20, 2),
             CLOSE NUMBER(20, 2),
@@ -41,37 +42,69 @@ def create_table(stock_code):
             P_CHANGE_RATE NUMBER(20, 6)
         )
     """
-    print(sql)
+    # print("执行的sql语句:\n",sql)
     cursor.execute(sql)
-    comments = ["COMMENT ON TABLE STOCK_"+stock_code+" IS '平安银行'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".UUID IS 'UUID'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".DATETIME IS '日期'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".CODE IS '股票代码'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".C_NAME IS '股票名称'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".INDUSTRY IS '所属行业'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".CLASSIFY IS '类别'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".OPEN IS '开盘价'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".CLOSE IS '收盘价'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".HIGH IS '最高价'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".LOW IS '最低价'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".VOLUME IS '成交量'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".AMOUNT IS '成交金额'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".Y_CLOSE IS '昨收盘'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".P_CHANGE IS '涨跌额'",
-                "COMMENT ON COLUMN STOCK_"+stock_code+".P_CHANGE_RATE IS '涨跌幅'"]
+    # 添加注释
+    comments = ["COMMENT ON TABLE STOCK_" + stock_code + " IS '" + stock_code + "'",  # 表注释
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".UUID IS 'UUID'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".DATETIME IS '日期'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".CODE IS '股票代码'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".C_NAME IS '股票名称'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".CLASSIFY IS '类别'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".OPEN IS '开盘价'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".CLOSE IS '收盘价'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".HIGH IS '最高价'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".LOW IS '最低价'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".VOLUME IS '成交量'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".AMOUNT IS '成交金额'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".Y_CLOSE IS '昨收盘'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".P_CHANGE IS '涨跌额'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".P_CHANGE_RATE IS '涨跌幅'"]
     for i in comments:
         print(i)
         cursor.execute(i)
 
 
-def insert_data():
-    pass
+# 插入数据
+def insert_data(stock_code, stock_data):
+    con = conn()
+    cursor = conn().cursor()
+    rows = []
+    for i in stock_data.index:
+        uuid = stock_data.loc[i, 'uuid']
+        date = stock_data.loc[i, 'date']
+        code = stock_data.loc[i, 'code']
+        name = stock_data.loc[i, 'name']
+        classify = stock_data.loc[i, 'classify']
+        open = stock_data.loc[i, 'open']
+        close = stock_data.loc[i, 'close']
+        high = stock_data.loc[i, 'high']
+        low = stock_data.loc[i, 'low']
+        volume = stock_data.loc[i, 'volume']
+        amount = stock_data.loc[i, 'amount']
+        y_close = stock_data.loc[i, 'y_close']
+        p_change = stock_data.loc[i, 'p_change']
+        p_change_rate = stock_data.loc[i, 'p_change_rate']
+        row = (uuid, date, code, name, classify, open, close, high, low, volume, amount, y_close, p_change,
+               p_change_rate)
+        rows.append(row)
+        print(close, type(close))
+    # print(rows, type(rows))
+
+    sql = "insert into STOCK_" + stock_code + "(uuid, datetime, code, c_name, classify, open, close, high, low, volume, " \
+                                              "amount, y_close, p_change, p_change_rate) " \
+                                              "values(:uuid, to_date(:datex, 'yyyy-mm-dd'), :code, :namex, :classify, " \
+                                              ":openx, :closex, :high, :low, :volume, :amount, :y_close, :p_change, :p_change_rate)"
+    print(sql)
+    # cursor.prepare(sql)
+    cursor.executemany(sql, rows)
+    con.commit()
 
 
-def query_columns(table, *columns):
-    for i in columns:
-        print(i)
-    print(table)
+# def query_columns(table, *columns):
+#     for i in columns:
+#         print(i)
+#     print(table)
 
 def all_company():
     """
@@ -106,7 +139,6 @@ def all_company():
     stockGpr = list(df['gpr'])  # 毛利率(%)
     stockNpr = list(df['npr'])  # 净利润率(%)
     stockHolders = list(df['holders'])  # 股东人数
-
 
     dfLen = len(df)
 
@@ -168,9 +200,13 @@ def all_company():
 
 
 def main():
-    # create_table('000004')
+    # create_table('000001')
+    data1 = gsd.get_data('000001')
+    data2 = fsd.format_data(data1)
+    insert_data('000001', data2)
     # all_company()
-    query_columns('000001', ('name', 'age', 'tel'))
+    # query_columns('000001', ('name', 'age', 'tel'))
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     main()

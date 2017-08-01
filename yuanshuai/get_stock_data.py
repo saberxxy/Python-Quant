@@ -28,15 +28,15 @@ def get_name(code):
     return name[0]
 
 
-def get_industry(code):
-    """
-    获取股票所属行业
-    :param code:
-    :return:
-    """
-    data = ts.get_stock_basics()
-    industry = data[data.index == code].industry
-    return industry[0]
+# def get_industry(code):
+#     """
+#     获取股票所属行业
+#     :param code:
+#     :return:
+#     """
+#     data = ts.get_stock_basics()
+#     industry = data[data.index == code].industry
+#     return industry[0]
 
 
 def get_type(code):
@@ -69,7 +69,6 @@ def get_all_company():
 def main():
     get_data(code='000001', start='2017-01-01')
     print(get_name('000001'))
-    print(get_industry('000001'))
     name = get_name('000001')
     print(name,type(name))
     # t = get_type('002001')

@@ -2,6 +2,7 @@ import tushare as ts
 import pandas as pd
 from pandas import DataFrame, Series
 import cx_Oracle
+import time
 import math
 import random
 from time import ctime, sleep

@@ -157,3 +157,30 @@ comment on column stock_operation.currentasset_days is '流动资产周转天数
 comment on column stock_operation.year is '年份';
 comment on column stock_operation.quarter is '季度';
 
+
+--获取成长能力
+create table stock_growth
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+mbrg number(20, 4),
+nprg number(20, 4),
+nav number(20, 4),
+targ number(20, 4),
+epsg number(20, 4),
+seg number(20, 4),
+year varchar2(5),
+quarter varchar2(2)
+);
+comment on table stock_growth is '成长能力表';
+comment on column stock_growth.uuid is '主键';
+comment on column stock_growth.code is '代码';
+comment on column stock_growth.name is '名称';
+comment on column stock_growth.mbrg is '应收账款周转率(次)';
+comment on column stock_growth.nprg is '应收账款周转天数(天)';
+comment on column stock_growth.nav is '存货周转率(次)';
+comment on column stock_growth.targ is '存货周转天数(天)';
+comment on column stock_growth.epsg is '流动资产周转率(次)';
+comment on column stock_growth.seg is '流动资产周转天数(天)';
+comment on column stock_growth.year is '年份';
+comment on column stock_growth.quarter is '季度';

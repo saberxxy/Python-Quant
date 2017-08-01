@@ -23,7 +23,7 @@ def create_table(stock_code):
     :param stock_code:股票代码
     :return:
     """
-    cursor = conn()
+    cursor = conn().cursor()
     sql = "CREATE TABLE STOCK_" + stock_code + """
     (
             UUID VARCHAR2(80) PRIMARY KEY,
@@ -113,7 +113,7 @@ def all_company():
     """
 
     # TODO: 建表语句用SQL脚本 or 代码执行
-    cursor = conn()
+    cursor = conn().cursor()
     df = gsd.get_all_company()
 
     stockCode = list(df.index)  # 股票代码
@@ -196,15 +196,15 @@ def all_company():
             cursor.execute("commit")
             print("已存入  ", i)
         except Exception:
-            pass
+            print("Error")
 
 
 def main():
     # create_table('000001')
-    data1 = gsd.get_data('000001')
-    data2 = fsd.format_data(data1)
-    insert_data('000001', data2)
-    # all_company()
+    # data1 = gsd.get_data('000001')
+    # data2 = fsd.format_data(data1)
+    # insert_data('000001', data2)
+    all_company()
     # query_columns('000001', ('name', 'age', 'tel'))
 
 

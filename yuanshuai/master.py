@@ -36,7 +36,7 @@ def split(table_list, thread_num=3):
     """
     切分列表
     :param table_list:要切分的列表
-    :param thread_num:切割为多少份（欲使用的线程数）
+    :param thread_num:分片个数（欲使用的线程数）
     :return:
     """
     # length = len(table_list)
@@ -60,9 +60,8 @@ def split(table_list, thread_num=3):
         tbl = table_list[int(left): int(right)]
         tbls.append(tbl)
         left = right
-        if right == positions[-1]:
-            if right < length:
-                tbls.append(table_list[int(left):int(length)])
+    if right < length:
+        tbls.append(table_list[int(left):int(length)])
     print("tbls:", tbls, len(tbls))
     return tbls
 
@@ -89,10 +88,9 @@ def multi(tbls):
 def main():
     cur = connect()
     rs = query(cur)
-    split(rs)
+    split(rs, 3)
     # multi(tbls)
     # print(tbl2)
-
 
 if __name__ == '__main__':
     main()

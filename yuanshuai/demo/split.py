@@ -46,6 +46,7 @@ def movie(func):
         print("I was at the movies %s. %s" %(func, ctime()))
         sleep(5)
 
+
 def multi():
     threads = []
     t1 = threading.Thread(target=music, args=(u'爱情买卖',))
@@ -67,30 +68,31 @@ def split(table_list, thread_num=3):
     :return:
     """
     # length = len(table_list)
-    length = 33
+    length = len(table_list)
     index_num = length / thread_num
     positions = []  # 存储分片位置
     position = index_num if index_num % 1 == 0 else math.ceil(index_num)
 
+    step = position  # 每次叠加的索引数
     while True:
         positions.append(position)
-        position = position + position
+        position = position + step
         if position > length:
             break
+    print("positions:", positions, type(positions))
 
-    print(positions, type(positions))
-    # print("position:", position, type(position))
-    tbls = []
+    tbls = []  # 分割后列表
+    left = 0
     for i in positions:
-        left = 0
         right = i
-        tbl = table_list[left: right]
+        tbl = table_list[int(left): int(right)]
         tbls.append(tbl)
         left = right
-    print(tbls, len(tbls))
-    tbl1 = table_list[0:position]
-    tbl2 = table_list[position:length]
-    return tbl1, tbl2
+        if right == positions[-1]:
+            if right < length:
+                tbls.append(table_list[int(left):int(length)])
+    print("tbls:", tbls, len(tbls))
+    return tbls
 
 
 def main():
@@ -99,7 +101,7 @@ def main():
         n = random.randint(0, 100)
         data.append(n)
     print(data)
-    split(data, 3)
+    split(data, 11)
 
 
 if __name__ == '__main__':

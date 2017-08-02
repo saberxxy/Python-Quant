@@ -27,9 +27,9 @@ def create_table(stock_code):
     sql = "CREATE TABLE STOCK_" + stock_code + """
     (
             UUID VARCHAR2(80) PRIMARY KEY,
-            DATETIME DATE NOT NULL,
+            "DATE" DATE NOT NULL,
             CODE VARCHAR2(20),
-            C_NAME VARCHAR2(80),
+            NAME VARCHAR2(80),
             CLASSIFY VARCHAR(80),
             OPEN NUMBER(20, 2),
             CLOSE NUMBER(20, 2),
@@ -42,14 +42,14 @@ def create_table(stock_code):
             P_CHANGE_RATE NUMBER(20, 6)
         )
     """
-    # print("执行的sql语句:\n",sql)
+    print("执行的sql语句:\n", sql)
     cursor.execute(sql)
     # 添加注释
     comments = ["COMMENT ON TABLE STOCK_" + stock_code + " IS '" + stock_code + "'",  # 表注释
                 "COMMENT ON COLUMN STOCK_" + stock_code + ".UUID IS 'UUID'",
-                "COMMENT ON COLUMN STOCK_" + stock_code + ".DATETIME IS '日期'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".\"DATE\" IS '日期'",
                 "COMMENT ON COLUMN STOCK_" + stock_code + ".CODE IS '股票代码'",
-                "COMMENT ON COLUMN STOCK_" + stock_code + ".C_NAME IS '股票名称'",
+                "COMMENT ON COLUMN STOCK_" + stock_code + ".NAME IS '股票名称'",
                 "COMMENT ON COLUMN STOCK_" + stock_code + ".CLASSIFY IS '类别'",
                 "COMMENT ON COLUMN STOCK_" + stock_code + ".OPEN IS '开盘价'",
                 "COMMENT ON COLUMN STOCK_" + stock_code + ".CLOSE IS '收盘价'",
@@ -68,7 +68,7 @@ def create_table(stock_code):
 # 插入数据
 def insert_data(stock_code, stock_data):
     con = conn()
-    cursor = conn().cursor()
+    cursor = con.cursor()
     rows = []
     for i in stock_data.index:
         uuid = stock_data.loc[i, 'uuid']
@@ -91,20 +91,16 @@ def insert_data(stock_code, stock_data):
         print(close, type(close))
     # print(rows, type(rows))
 
-    sql = "insert into STOCK_" + stock_code + "(uuid, datetime, code, c_name, classify, open, close, high, low, volume, " \
-                                              "amount, y_close, p_change, p_change_rate) " \
-                                              "values(:uuid, to_date(:datex, 'yyyy-mm-dd'), :code, :namex, :classify, " \
-                                              ":openx, :closex, :high, :low, :volume, :amount, :y_close, :p_change, :p_change_rate)"
+    sql = "insert into STOCK_" + stock_code + "(uuid, \"DATE\", code, name, classify, open, close, high, low, " \
+                                              "volume, amount, y_close, p_change, p_change_rate)values(:uuid, " \
+                                              "to_date(:datex, 'yyyy-mm-dd'), :code, :namex, :classify, :openx, " \
+                                              ":closex, :high, :low, :volume, :amount, :y_close, :p_change, " \
+                                              ":p_change_rate) "
     print(sql)
-    # cursor.prepare(sql)
+    cursor.prepare(sql)
     cursor.executemany(sql, rows)
     con.commit()
 
-
-# def query_columns(table, *columns):
-#     for i in columns:
-#         print(i)
-#     print(table)
 
 def all_company():
     """
@@ -200,11 +196,11 @@ def all_company():
 
 
 def main():
-    # create_table('000001')
-    # data1 = gsd.get_data('000001')
-    # data2 = fsd.format_data(data1)
-    # insert_data('000001', data2)
-    all_company()
+    # create_table('000004')
+    data1 = gsd.get_data('000004')
+    data2 = fsd.format_data(data1)
+    insert_data('000004', data2)
+    # all_company()
     # query_columns('000001', ('name', 'age', 'tel'))
 
 

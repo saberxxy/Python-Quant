@@ -1,5 +1,8 @@
 import tushare as ts
 import time
+import cx_Oracle
+
+conn = cx_Oracle.connect('stock/123456@localhost:1521/orcl')
 
 
 def get_data(code, start=None, end=None, index=False):
@@ -22,21 +25,15 @@ def get_name(code):
     :param code:
     :return:
     """
-    # TODO: 查表代替执行方法
-    data = ts.get_stock_basics()
-    name = data[data.index == code].name
-    return name[0]
-
-
-# def get_industry(code):
-#     """
-#     获取股票所属行业
-#     :param code:
-#     :return:
-#     """
-#     data = ts.get_stock_basics()
-#     industry = data[data.index == code].industry
-#     return industry[0]
+    cursor = conn.cursor()
+    sql = "select name from STOCK_BASICS WHERE code ="+code
+    cursor.execute(sql)
+    rs = cursor.fetchone()
+    # print(rs[0])
+    name = rs[0]
+    return name
+    # for i in rs:
+    #     print(i, type(i))
 
 
 def get_type(code):
@@ -67,10 +64,10 @@ def get_all_company():
 
 
 def main():
-    get_data(code='000001', start='2017-01-01')
-    print(get_name('000001'))
+    # get_data(code='000001', start='2017-01-01')
+    # print(get_name('000001'))
     name = get_name('000001')
-    print(name,type(name))
+    print(name, type(name))
     # t = get_type('002001')
     # print(t)
 

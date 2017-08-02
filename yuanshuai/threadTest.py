@@ -1,39 +1,14 @@
-import tushare as ts
 import threading
+import random
 from time import ctime, sleep
 import math
-import get_stock_data as gsd
-import format_stock_data as fsd
-import oracle_connect as oc
-
-conn = oc.conn()
-cursor = conn.cursor()
-
-
-# 查询数据,获得所有上市公司股票代码
-def query():
-    """
-    查询数据库获取所有股票code
-    :return:
-    """
-    sql = "select code from STOCK_BASICS"
-    rs = cursor.execute(sql)
-    result = rs.fetchall()
-    tables = [i[0] for i in result]
-    print(tables, type(tables))
-    return tables
-    # for i in result:
-    #     # print(i, type(i))  # 返回元组
-    #     tables.append(i[0])
-    # # print(tables, type(tables))
-    # return tables
 
 
 def split(table_list, thread_num=3):
     """
     切分列表
     :param table_list:要切分的列表
-    :param thread_num:分片个数（欲使用的线程数）
+    :param thread_num:要使用的线程数
     :return:
     """
     # length = len(table_list)
@@ -57,30 +32,30 @@ def split(table_list, thread_num=3):
         tbl = table_list[int(left): int(right)]
         tbls.append(tbl)
         left = right
+        # if right == positions[-1]:
+        #     if right < length:
+        #         tbls.append(table_list[int(left):int(length)])
+
     if right < length:
         tbls.append(table_list[int(left):int(length)])
     print("tbls:", tbls, len(tbls))
     return tbls
 
 
-# 创建表
 def create(tables):
     for i in tables:
-        oc.create_table(i)
         print("create table stock_"+i, ctime())
+        sleep(1)
 
 
-# 插入数据
 def insert(tables):
     for i in tables:
-        df = gsd.get_data(i, '2017-01-01')
-        data = fsd.format_data(df)
         print("get stock_"+i, ctime())
-        oc.insert_data(i, data)
         print("insert data to stock_%s, %s" % (i, ctime()))
+        sleep(3)
 
 
-# 处理（建表，插数）切分好的1/n数据
+# 执行切分好的1/n数据
 def create_insert(tables):
     threads = []
     t1 = threading.Thread(target=create, args=(tables,))
@@ -94,14 +69,21 @@ def create_insert(tables):
 
 
 def main():
-    # rs = query()
-    # print(len(rs))
-    rs = ['002300', '002301', '002302', '002303', '002304', '002305', '002306', '002307']
-    tbls = split(rs, 4)
+    tables = []
+    for i in range(15):
+        tables.append(str(i))
+    tbls = split(tables, 3)
     for tbl in tbls:
-        create_insert(tbl)
-    print('ALL OVER!', ctime())
-
+        # TODO: 初步多线程，如何提速？线程外套线程如何写？or多进程
+        threads = []
+        th = threading.Thread(target=create_insert, args=(tbl,))
+        threads.append(th)
+        for t in threads:
+            t.setDaemon(True)
+            t.start()
+        t.join()
+        # create_insert(tbl)
+    print("all over! %s" % (ctime()))
 
 
 if __name__ == '__main__':

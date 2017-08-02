@@ -21,7 +21,6 @@ def format_data(raw_data):
                                     'y_close', 'p_change', 'p_change_rate'])
     close_p = data['close']  # 收盘
     data['y_close'] = close_p.shift(-1)  # 昨收盘
-
     for i in data.index:
         data.loc[i, 'date'] = i.to_datetime().strftime('%Y-%m-%d')  # date
         data.loc[i, 'uuid'] = str(uuid.uuid1()) + "_" + data.loc[i, 'date']  # uuid

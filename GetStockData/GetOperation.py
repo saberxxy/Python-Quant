@@ -35,6 +35,9 @@ def getOperation(cursor):
             try:
                 print(i, j)
                 df = ts.get_operation_data(i, j)
+
+                # 处理缺失值
+                df = df.stack().replace('--', '0').unstack()
                 # print(df)
 
                 dfLen = len(df)

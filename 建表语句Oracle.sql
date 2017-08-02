@@ -184,3 +184,31 @@ comment on column stock_growth.epsg is '流动资产周转率(次)';
 comment on column stock_growth.seg is '流动资产周转天数(天)';
 comment on column stock_growth.year is '年份';
 comment on column stock_growth.quarter is '季度';
+
+
+--获取偿债能力
+create table stock_debtpaying
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+currentratio number(20, 4),
+quickratio number(20, 4),
+cashratio number(20, 4),
+icratio number(20, 4),
+sheqratio number(20, 4),
+adratio number(20, 4),
+year varchar2(5),
+quarter varchar2(2)
+);
+comment on table stock_debtpaying is '偿债能力表';
+comment on column stock_debtpaying.uuid is '主键';
+comment on column stock_debtpaying.code is '代码';
+comment on column stock_debtpaying.name is '名称';
+comment on column stock_debtpaying.currentratio is '流动比率';
+comment on column stock_debtpaying.quickratio is '速动比率';
+comment on column stock_debtpaying.cashratio is '现金比率';
+comment on column stock_debtpaying.icratio is '利息支付倍数';
+comment on column stock_debtpaying.sheqratio is '股东权益比率';
+comment on column stock_debtpaying.adratio is '股东权益增长率';
+comment on column stock_debtpaying.year is '年份';
+comment on column stock_debtpaying.quarter is '季度';

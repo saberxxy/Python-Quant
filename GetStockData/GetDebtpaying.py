@@ -1,11 +1,12 @@
 # -*- coding=utf-8 -*-
-# 获取成长能力
+# 获取偿债能力
 
 import tushare as ts
 import uuid
 from sqlalchemy import create_engine
 import cx_Oracle as cxo
 import configparser
+import pandas
 
 
 def getConfig():
@@ -24,21 +25,20 @@ def getConfig():
 
 # 检查表中是否存在数据
 def haveData(cursor):
-    cursor.execute("select count(1) from stock_growth")
+    cursor.execute("select count(1) from stock_debtpaying")
     pdata = cursor.fetchone()
     return pdata[0]
 
 
-def getGrowth(cursor):
+def getDebtpaying(cursor):
     for i in range(1992, 2017+1):
         for j in range(1, 4+1):
             try:
                 print(i, j)
-                df = ts.get_growth_data(i, j)
+                df = ts.get_debtpaying_data(i, j)
 
                 # 处理缺失值
                 df = df.stack().replace('--', '0').unstack()
-                # print(df)
 
                 dfLen = len(df)
                 # print(dfLen)
@@ -57,13 +57,13 @@ def getGrowth(cursor):
                 for k in range(0, dfLen):
                     df2 = df[k:k+1]
 
-                    cursor.execute("insert into stock_growth(uuid, code, name, mbrg, nprg, nav, "
-                               "targ, epsg, seg, year, quarter) "
-                               "values(:uuid, :code, :name, :mbrg, :nprg, :nav, "
-                               ":targ, :epsg, :seg,  :year, :quarter)",
-                               (str(list(df2['uuid'])[0]), str(list(df2['code'])[0]), str(list(df2['name'])[0]), round(float(df2['mbrg']), 4),
-                                round(float(df2['nprg']), 4), round(float(df2['nav']), 4),
-                                round(float(df2['targ']), 4), round(float(df2['epsg']), 4), round(float(df2['seg']), 4),
+                    cursor.execute("insert into stock_debtpaying(uuid, code, name, currentratio, quickratio, cashratio, "
+                               "icratio, sheqratio, adratio, year, quarter) "
+                               "values(:uuid, :code, :name, :currentratio, :quickratio, :cashratio, "
+                               ":icratio, :sheqratio, :adratio, :year, :quarter)",
+                               (str(list(df2['uuid'])[0]), str(list(df2['code'])[0]), str(list(df2['name'])[0]), round(float(df2['currentratio']), 4),
+                                round(float(df2['quickratio']), 4), round(float(df2['cashratio']), 4),
+                                round(float(df2['icratio']), 4), round(float(df2['sheqratio']), 4), round(float(df2['adratio']), 4),
                                 str(list(df2['year'])[0]), str(list(df2['quarter'])[0])) )
                 cursor.execute("commit")
             except Exception:
@@ -74,11 +74,20 @@ def main():
     cursor = getConfig()
     pdata = haveData(cursor)
     if pdata == 0:
-        getGrowth(cursor)
+        getDebtpaying(cursor)
     else:
-        cursor.execute("truncate table stock_growth")
+        cursor.execute("truncate table stock_debtpaying")
         print("发现数据，清除完毕")
-        getGrowth(cursor)
+        getDebtpaying(cursor)
+
+    # df = ts.get_debtpaying_data(1994, 2)
+    # print(df['currentratio'][0])
+    # if '--' in df['currentratio']:
+    #     print(1)
+    # df['currentratio'].replace('--', 0)
+    # df = df.stack().replace('--', '0').unstack()
+    # print(df)
+
 
 
 

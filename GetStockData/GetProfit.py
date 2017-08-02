@@ -35,6 +35,9 @@ def getProfit(cursor):
             try:
                 print(i, j)
                 df = ts.get_profit_data(i, j)
+
+                # 处理缺失值
+                df = df.stack().replace('--', '0').unstack()
                 # print(df)
 
                 dfLen = len(df)

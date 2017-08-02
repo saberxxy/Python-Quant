@@ -41,7 +41,7 @@ def create_table(stock_code):
             P_CHANGE_RATE NUMBER(20, 6)
         )
     """
-    print("执行的sql语句:\n", sql)
+    # print("执行的sql语句:\n", sql)
     cursor.execute(sql)
     # 添加注释
     comments = ["COMMENT ON TABLE STOCK_" + stock_code + " IS '" + stock_code + "'",  # 表注释
@@ -95,7 +95,6 @@ def insert_data(stock_code, stock_data):
         row = (uuid, date, code, name, classify, open, close, high, low, volume, amount, y_close, p_change,
                p_change_rate)
         rows.append(row)
-        print(close, type(close))
     # print(rows, type(rows))
 
     sql = "insert into STOCK_" + stock_code + "(uuid, \"DATE\", code, name, classify, open, close, high, low, " \
@@ -103,7 +102,6 @@ def insert_data(stock_code, stock_data):
                                               "to_date(:datex, 'yyyy-mm-dd'), :code, :namex, :classify, :openx, " \
                                               ":closex, :high, :low, :volume, :amount, :y_close, :p_change, " \
                                               ":p_change_rate) "
-    print(sql)
     cursor.prepare(sql)
     cursor.executemany(sql, rows)
     con.commit()

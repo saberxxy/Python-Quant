@@ -63,37 +63,45 @@ def split(table_list, thread_num=3):
     return tbls
 
 
-def insert(tbl):
-    for i in tbl:
-        print("create table %s, %s" % (i, ctime()))
-        # TODO: 分开执行，先建所有表or一起执行
-        # 建表
+# 创建表
+def create(tables):
+    for i in tables:
         oc.create_table(i)
-        # 获取数据并格式化处理
-
-        # 插数
-
-        sleep(1)
+        print("create table stock_"+i, ctime())
 
 
-def multi(tbls):
+# 插入数据
+def insert(tables):
+    for i in tables:
+        df = gsd.get_data(i, '2017-01-01')
+        data = fsd.format_data(df)
+        print("get stock_"+i, ctime())
+        oc.insert_data(i, data)
+        print("insert data to stock_%s, %s" % (i, ctime()))
+
+
+# 处理（建表，插数）切分好的1/n数据
+def create_insert(tables):
     threads = []
-    t1 = threading.Thread(target=insert, args=(tbls[0],))
+    t1 = threading.Thread(target=create, args=(tables,))
     threads.append(t1)
-    t2 = threading.Thread(target=insert, args=(tbls[1],))
+    t2 = threading.Thread(target=insert, args=(tables,))
     threads.append(t2)
     for t in threads:
         t.setDaemon(True)
         t.start()
     t.join()
-    print('all over!', ctime())
 
 
 def main():
-    rs = query()
-    tbls = split(rs, 3)
-    multi(tbls)
-    # print(tbl2)
+    # rs = query()
+    # print(len(rs))
+    rs = ['002300', '002301', '002302', '002303', '002304', '002305', '002306', '002307']
+    tbls = split(rs, 4)
+    for tbl in tbls:
+        create_insert(tbl)
+    print('ALL OVER!', ctime())
+
 
 
 if __name__ == '__main__':

@@ -52,7 +52,7 @@ def insert(tables):
     for i in tables:
         print("get stock_"+i, ctime())
         print("insert data to stock_%s, %s" % (i, ctime()))
-        sleep(5)
+        sleep(3)
 
 
 # 执行切分好的1/n数据
@@ -70,22 +70,20 @@ def create_insert(tables):
 
 def main():
     tables = []
-    for i in range(33):
+    for i in range(15):
         tables.append(str(i))
     tbls = split(tables, 3)
     for tbl in tbls:
         # TODO: 初步多线程，如何提速？线程外套线程如何写？or多进程
-        # threads = []
-        # th = threading.Thread(target=create_insert, args=(tbl,))
-        # threads.append(th)
-        # for t in threads:
-        #     t.setDaemon(True)
-        #     t.start()
-        # t.join()
-        create_insert(tbl)
+        threads = []
+        th = threading.Thread(target=create_insert, args=(tbl,))
+        threads.append(th)
+        for t in threads:
+            t.setDaemon(True)
+            t.start()
+        t.join()
+        # create_insert(tbl)
     print("all over! %s" % (ctime()))
-
-
 
 
 if __name__ == '__main__':

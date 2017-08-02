@@ -1,35 +1,32 @@
 import tushare as ts
-import cx_Oracle
 import threading
 from time import ctime, sleep
 import math
+import get_stock_data as gsd
+import format_stock_data as fsd
+import oracle_connect as oc
 
-# 要操作的表的列表
-tables = []
-
-
-def connect():
-    conn = cx_Oracle.connect('stock/123456@localhost:1521/orcl')
-    cursor = conn.cursor()
-    return cursor
+conn = oc.conn()
+cursor = conn.cursor()
 
 
-# 查询数据
-def query(cursor):
+# 查询数据,获得所有上市公司股票代码
+def query():
     """
     查询数据库获取所有股票code
-    :param cursor:
     :return:
     """
     sql = "select code from STOCK_BASICS"
     rs = cursor.execute(sql)
     result = rs.fetchall()
-
-    for i in result:
-        # print(i, type(i))  # 返回元组
-        tables.append(i[0])
-    # print(tables, type(tables))
+    tables = [i[0] for i in result]
+    print(tables, type(tables))
     return tables
+    # for i in result:
+    #     # print(i, type(i))  # 返回元组
+    #     tables.append(i[0])
+    # # print(tables, type(tables))
+    # return tables
 
 
 def split(table_list, thread_num=3):
@@ -68,7 +65,14 @@ def split(table_list, thread_num=3):
 
 def insert(tbl):
     for i in tbl:
-        print("insert table %s, %s" % (i, ctime()))
+        print("create table %s, %s" % (i, ctime()))
+        # TODO: 分开执行，先建所有表or一起执行
+        # 建表
+        oc.create_table(i)
+        # 获取数据并格式化处理
+
+        # 插数
+
         sleep(1)
 
 
@@ -86,11 +90,11 @@ def multi(tbls):
 
 
 def main():
-    cur = connect()
-    rs = query(cur)
-    split(rs, 3)
-    # multi(tbls)
+    rs = query()
+    tbls = split(rs, 3)
+    multi(tbls)
     # print(tbl2)
+
 
 if __name__ == '__main__':
     main()

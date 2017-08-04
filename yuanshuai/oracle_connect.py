@@ -96,15 +96,18 @@ def insert_data(stock_code, stock_data):
                p_change_rate)
         rows.append(row)
     # print(rows, type(rows))
+    try:
 
-    sql = "insert into STOCK_" + stock_code + "(uuid, \"DATE\", code, name, classify, open, close, high, low, " \
+        sql = "insert into STOCK_" + stock_code + "(uuid, \"DATE\", code, name, classify, open, close, high, low, " \
                                               "volume, amount, y_close, p_change, p_change_rate)values(:uuid, " \
                                               "to_date(:datex, 'yyyy-mm-dd'), :code, :namex, :classify, :openx, " \
                                               ":closex, :high, :low, :volume, :amount, :y_close, :p_change, " \
                                               ":p_change_rate) "
-    cursor.prepare(sql)
-    cursor.executemany(sql, rows)
-    con.commit()
+        cursor.prepare(sql)
+        cursor.executemany(sql, rows)
+        con.commit()
+    except Exception:
+        print("Error")
 
 
 def main():

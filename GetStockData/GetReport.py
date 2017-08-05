@@ -5,33 +5,11 @@ import tushare as ts
 import cx_Oracle as cxo
 import configparser
 
-# 从1992年第二季度到2017年第二季度
-# 返回数据格式
-# code,代码
-# name,名称
-# eps,每股收益
-# eps_yoy,每股收益同比(%)
-# bvps,每股净资产
-# roe,净资产收益率(%)
-# epcf,每股现金流量(元)
-# net_profits,净利润(万元)
-# profits_yoy,净利润同比(%)
-# distrib,分配方案
-# report_date,发布日期
+# 导入连接文件
+import sys
+sys.path.append("..")
+import common.GetOracleConn as conn
 
-def getConfig():
-    cf = configparser.ConfigParser()
-    cf.read("config.conf")
-    oracleHost = str(cf.get("oracle", "ip"))
-    oraclePort = int(cf.get("oracle", "port"))
-    oracleUser = str(cf.get("oracle", "username"))
-    oraclePassword = str(cf.get("oracle", "password"))
-    oracleDatabaseName = str(cf.get("oracle", "databasename"))
-    oracleConn = oracleUser + '/' + oraclePassword + '@' + oracleHost + '/' + oracleDatabaseName
-    conn = cxo.connect(oracleConn)
-    cursor = conn.cursor()
-    print("已获取数据库连接")
-    return cursor
 
 # 检查表中是否存在数据
 def haveData(cursor):
@@ -117,7 +95,7 @@ def getReport(cursor):
 
 
 def main():
-    cursor = getConfig()
+    cursor = conn.getConfig()
     pdata = haveData(cursor)
     if pdata == 0:
         getReport(cursor)

@@ -8,20 +8,11 @@ import cx_Oracle as cxo
 import configparser
 import pandas
 
+# 导入连接文件
+import sys
+sys.path.append("..")
+import common.GetOracleConn as conn
 
-def getConfig():
-    cf = configparser.ConfigParser()
-    cf.read("config.conf")
-    oracleHost = str(cf.get("oracle", "ip"))
-    oraclePort = int(cf.get("oracle", "port"))
-    oracleUser = str(cf.get("oracle", "username"))
-    oraclePassword = str(cf.get("oracle", "password"))
-    oracleDatabaseName = str(cf.get("oracle", "databasename"))
-    oracleConn = oracleUser + '/' + oraclePassword + '@' + oracleHost + '/' + oracleDatabaseName
-    conn = cxo.connect(oracleConn)
-    cursor = conn.cursor()
-    print("已获取数据库连接")
-    return cursor
 
 # 检查表中是否存在数据
 def haveData(cursor):
@@ -39,6 +30,7 @@ def getDebtpaying(cursor):
 
                 # 处理缺失值
                 df = df.stack().replace('--', '0').unstack()
+                # print(df)
 
                 dfLen = len(df)
                 # print(dfLen)
@@ -53,7 +45,6 @@ def getDebtpaying(cursor):
                 df['year'] = yearList
                 df['quarter'] = quarterList
 
-                cursor = getConfig()
                 for k in range(0, dfLen):
                     df2 = df[k:k+1]
 
@@ -71,7 +62,7 @@ def getDebtpaying(cursor):
 
 
 def main():
-    cursor = getConfig()
+    cursor = conn.getConfig()
     pdata = haveData(cursor)
     if pdata == 0:
         getDebtpaying(cursor)
@@ -79,14 +70,6 @@ def main():
         cursor.execute("truncate table stock_debtpaying")
         print("发现数据，清除完毕")
         getDebtpaying(cursor)
-
-    # df = ts.get_debtpaying_data(1994, 2)
-    # print(df['currentratio'][0])
-    # if '--' in df['currentratio']:
-    #     print(1)
-    # df['currentratio'].replace('--', 0)
-    # df = df.stack().replace('--', '0').unstack()
-    # print(df)
 
 
 

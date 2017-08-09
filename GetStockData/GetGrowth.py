@@ -7,20 +7,11 @@ from sqlalchemy import create_engine
 import cx_Oracle as cxo
 import configparser
 
+# 导入连接文件
+import sys
+sys.path.append("..")
+import common.GetOracleConn as conn
 
-def getConfig():
-    cf = configparser.ConfigParser()
-    cf.read("config.conf")
-    oracleHost = str(cf.get("oracle", "ip"))
-    oraclePort = int(cf.get("oracle", "port"))
-    oracleUser = str(cf.get("oracle", "username"))
-    oraclePassword = str(cf.get("oracle", "password"))
-    oracleDatabaseName = str(cf.get("oracle", "databasename"))
-    oracleConn = oracleUser + '/' + oraclePassword + '@' + oracleHost + '/' + oracleDatabaseName
-    conn = cxo.connect(oracleConn)
-    cursor = conn.cursor()
-    print("已获取数据库连接")
-    return cursor
 
 # 检查表中是否存在数据
 def haveData(cursor):
@@ -37,8 +28,7 @@ def getGrowth(cursor):
                 df = ts.get_growth_data(i, j)
 
                 # 处理缺失值
-                df = df.stack().replace('--', '0').unstack()
-                # print(df)
+                df = df.fillna(0)
 
                 dfLen = len(df)
                 # print(dfLen)
@@ -53,7 +43,6 @@ def getGrowth(cursor):
                 df['year'] = yearList
                 df['quarter'] = quarterList
 
-                cursor = getConfig()
                 for k in range(0, dfLen):
                     df2 = df[k:k+1]
 
@@ -71,7 +60,8 @@ def getGrowth(cursor):
 
 
 def main():
-    cursor = getConfig()
+    cursor = conn.getConfig()
+    # print(cursor)
     pdata = haveData(cursor)
     if pdata == 0:
         getGrowth(cursor)

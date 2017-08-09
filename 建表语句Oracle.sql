@@ -1,4 +1,4 @@
-﻿--sys
+--sys
 create tablespace stock
 datafile 'G:/app/datafile/stock.dbf' size 100M  
 autoextend on;
@@ -212,3 +212,29 @@ comment on column stock_debtpaying.sheqratio is '股东权益比率';
 comment on column stock_debtpaying.adratio is '股东权益增长率';
 comment on column stock_debtpaying.year is '年份';
 comment on column stock_debtpaying.quarter is '季度';
+
+
+--获取现金流量
+create table stock_cashflow
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+cf_sales number(20, 4),
+rateofreturn number(20, 4),
+cf_nm number(20, 4),
+cf_liabilities number(20, 4),
+cashflowratio number(20, 4),
+year varchar2(5),
+quarter varchar2(2)
+);
+comment on table stock_cashflow is '现金流量表';
+comment on column stock_cashflow.uuid is '主键';
+comment on column stock_cashflow.code is '代码';
+comment on column stock_cashflow.name is '名称';
+comment on column stock_cashflow.cf_sales is '经营现金净流量对销售收入比率';
+comment on column stock_cashflow.rateofreturn is '资产的经营现金流量回报率';
+comment on column stock_cashflow.cf_nm is '经营现金净流量与净利润的比率';
+comment on column stock_cashflow.cf_liabilities is '经营现金净流量对负债比率';
+comment on column stock_cashflow.cashflowratio is '现金流量比率';
+comment on column stock_cashflow.year is '年份';
+comment on column stock_cashflow.quarter is '季度';

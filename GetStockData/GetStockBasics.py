@@ -4,8 +4,11 @@
 import tushare as ts
 import cx_Oracle as cxo
 import configparser
-from pypinyin import pinyin
-import pypinyin
+
+# 导入连接文件
+import sys
+sys.path.append("..")
+import common.GetOracleConn as conn
 
 
 def getBasics(cursor):
@@ -77,29 +80,11 @@ def getBasics(cursor):
                         stockTotalsDB, stockTotalAssetsDB, stockLiquidAssetsDB, stockFixedAssetsDB, stockReservedDB,
                         stockReservedPerShareDB, stockEspDB, stockBvpsDB, stockPbDB, timeToMarketDB, stockUndpDB,
                         stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB))
-            # cursor.execute("commit")
+            cursor.execute("commit")
             print("已存入  ", i)
         except Exception:
             pass
 
-    # 批量提交
-    cursor.execute("commit")
-
-
-# 获取数据库连接
-def getConfig():
-    cf = configparser.ConfigParser()
-    cf.read("config.conf")
-    oracleHost = str(cf.get("oracle", "ip"))
-    oraclePort = int(cf.get("oracle", "port"))
-    oracleUser = str(cf.get("oracle", "username"))
-    oraclePassword = str(cf.get("oracle", "password"))
-    oracleDatabaseName = str(cf.get("oracle", "databasename"))
-    oracleConn = oracleUser + '/' + oraclePassword + '@' + oracleHost + '/' + oracleDatabaseName
-    conn = cxo.connect(oracleConn)
-    cursor = conn.cursor()
-    print("已获取数据库连接")
-    return cursor
 
 # 检查表中是否存在数据
 def haveData(cursor):
@@ -108,7 +93,7 @@ def haveData(cursor):
     return pdata[0]
 
 def main():
-    cursor = getConfig()
+    cursor = conn.getConfig()
     pdata = haveData(cursor)
     if pdata == 0:
         getBasics(cursor)

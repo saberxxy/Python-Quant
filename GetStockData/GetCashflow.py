@@ -1,5 +1,5 @@
 # -*- coding=utf-8 -*-
-# 获取偿债能力
+# 获取现金流量
 
 import tushare as ts
 import uuid
@@ -16,20 +16,20 @@ import common.GetOracleConn as conn
 
 # 检查表中是否存在数据
 def haveData(cursor):
-    cursor.execute("select count(1) from stock_debtpaying")
+    cursor.execute("select count(1) from stock_cashflow")
     pdata = cursor.fetchone()
     return pdata[0]
 
 
-def getDebtpaying(cursor):
+def getCashflow(cursor):
     for i in range(1992, 2017+1):
         for j in range(1, 4+1):
             try:
                 print(i, j)
-                df = ts.get_debtpaying_data(i, j)
+                df = ts.get_cashflow_data(i, j)
 
                 # 处理缺失值
-                df = df.stack().replace('--', '0').unstack()
+                df = df.fillna(0)
                 # print(df)
 
                 dfLen = len(df)
@@ -48,13 +48,13 @@ def getDebtpaying(cursor):
                 for k in range(0, dfLen):
                     df2 = df[k:k+1]
 
-                    cursor.execute("insert into stock_debtpaying(uuid, code, name, currentratio, quickratio, cashratio, "
-                               "icratio, sheqratio, adratio, year, quarter) "
-                               "values(:uuid, :code, :name, :currentratio, :quickratio, :cashratio, "
-                               ":icratio, :sheqratio, :adratio, :year, :quarter)",
-                               (str(list(df2['uuid'])[0]), str(list(df2['code'])[0]), str(list(df2['name'])[0]), round(float(df2['currentratio']), 4),
-                                round(float(df2['quickratio']), 4), round(float(df2['cashratio']), 4),
-                                round(float(df2['icratio']), 4), round(float(df2['sheqratio']), 4), round(float(df2['adratio']), 4),
+                    cursor.execute("insert into stock_cashflow(uuid, code, name, cf_sales, rateofreturn, cf_nm, "
+                               "cf_liabilities, cashflowratio, year, quarter) "
+                               "values(:uuid, :code, :name, :cf_sales, :rateofreturn, :cf_nm, "
+                               ":cf_liabilities, :cashflowratio, :year, :quarter)",
+                               (str(list(df2['uuid'])[0]), str(list(df2['code'])[0]), str(list(df2['name'])[0]), round(float(df2['cf_sales']), 4),
+                                round(float(df2['rateofreturn']), 4), round(float(df2['cf_nm']), 4),
+                                round(float(df2['cf_liabilities']), 4), round(float(df2['cashflowratio']), 4),
                                 str(list(df2['year'])[0]), str(list(df2['quarter'])[0])) )
                 cursor.execute("commit")
             except Exception:
@@ -65,11 +65,11 @@ def main():
     cursor = conn.getConfig()
     pdata = haveData(cursor)
     if pdata == 0:
-        getDebtpaying(cursor)
+        getCashflow(cursor)
     else:
-        cursor.execute("truncate table stock_debtpaying")
+        cursor.execute("truncate table stock_cashflow")
         print("发现数据，清除完毕")
-        getDebtpaying(cursor)
+        getCashflow(cursor)
 
 
 

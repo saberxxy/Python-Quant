@@ -16,13 +16,13 @@ def conn(username='stock', password='123456', host='localhost', port=1521, sid='
 
 
 # 建表
-def create_table(stock_code):
+def create_table(conn, stock_code):
     """
     创建空表
     :param stock_code:股票代码
     :return:
     """
-    cursor = conn().cursor()
+    cursor = conn.cursor()
     sql = "CREATE TABLE STOCK_" + stock_code + """
     (
             UUID VARCHAR2(80) PRIMARY KEY,
@@ -63,19 +63,20 @@ def create_table(stock_code):
         # print(i)
         cursor.execute(i)
         # TODO: 不需要commit?
-        print("stock_"+stock_code+"表已创建", time.ctime())
+        # print("stock_"+stock_code+"表已创建", time.ctime())
 
 
 # 插入数据
-def insert_data(stock_code, stock_data):
+def insert_data(conn, stock_code, stock_data):
+    cursor = conn.cursor()
     """
     向表中插入数据
     :param stock_code:股票代码
     :param stock_data: 股票数据
     :return:
     """
-    con = conn()
-    cursor = con.cursor()
+    # con = conn()
+    # cursor = con.cursor()
     rows = []
     for i in stock_data.index:
         uuid = stock_data.loc[i, 'uuid']
@@ -105,7 +106,7 @@ def insert_data(stock_code, stock_data):
                                               ":p_change_rate) "
         cursor.prepare(sql)
         cursor.executemany(sql, rows)
-        con.commit()
+        conn.commit()
     except Exception:
         print("Error")
 

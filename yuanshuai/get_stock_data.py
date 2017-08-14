@@ -5,6 +5,20 @@ import cx_Oracle
 conn = cx_Oracle.connect('stock/123456@localhost:1521/orcl')
 
 
+def query(conn):
+    """
+    查询数据库获取所有股票code
+    :return:
+    """
+    cursor = conn.cursor()
+    sql = "select code from STOCK_BASICS"
+    rs = cursor.execute(sql)
+    result = rs.fetchall()
+    tables = [i[0] for i in result]
+    print(tables, type(tables))
+    return tables
+
+
 def get_data(code, start=None, end=None, index=False):
     """
     获取原始数据

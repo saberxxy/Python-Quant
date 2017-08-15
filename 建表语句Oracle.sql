@@ -238,3 +238,28 @@ comment on column stock_cashflow.cf_liabilities is '经营现金净流量对负�
 comment on column stock_cashflow.cashflowratio is '现金流量比率';
 comment on column stock_cashflow.year is '年份';
 comment on column stock_cashflow.quarter is '季度';
+
+
+--获取分配预案数据
+create table stock_profit_data
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+year varchar2(5),
+report_date date,
+divi  number(20, 4),
+shares number(20, 4)
+);
+comment on table stock_profit_data is '分配预案表';
+comment on column stock_profit_data.uuid is '主键';
+comment on column stock_profit_data.code is '代码';
+comment on column stock_profit_data.name is '名称';
+comment on column stock_profit_data.year is '年份';
+comment on column stock_profit_data.report_date is '公布日期';
+comment on column stock_profit_data.divi is '分红金额（每10股）';
+comment on column stock_profit_data.shares is '转增和送股数（每10股）';
+
+
+
+
+

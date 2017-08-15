@@ -6,13 +6,48 @@ import time
 
 
 # 连接数据库
-def conn(username='stock', password='123456', host='localhost', port=1521, sid='orcl'):
+def connect(username='stock', password='123456', host='localhost', port=1521, sid='orcl'):
     tns = cx_Oracle.makedsn(host, port, sid)
     con = cx_Oracle.connect(username, password, tns)  # 连接数据库
     print('connect successfully! the Oracle version:', con.version)  # 打印版本号
     # cursor = conn.cursor()  # 创建cursor
     # return cursor
     return con
+
+
+# 判断表是否已存在
+def is_table_exist(conn, code):
+    table = "STOCK_"+code
+    cursor = conn.cursor()
+    sql = "select table_name from user_tables"
+    rs = cursor.execute(sql)
+    result = rs.fetchall()
+    tables = [i[0] for i in result]
+    print(tables, type(tables))
+    return tables.__contains__(table)
+
+
+# 删除一张表
+def delete_table(conn, code):
+    table = "STOCK_" + code
+    cursor = conn.cursor()
+    sql = "drop table "+table
+    try:
+        cursor.execute(sql)
+        conn.commit()
+    except:
+        print('表STOCK_',code,' 删除失败')
+
+
+# 查看当前所有表
+def all_solved_tables(conn):
+    cursor = conn.cursor()
+    sql = "select table_name from user_tables"
+    rs = cursor.execute(sql)
+    result = rs.fetchall()
+    tables = [i[0] for i in result]
+    tables.remove('STOCK_BASICS')
+    return tables
 
 
 # 建表
@@ -113,11 +148,14 @@ def insert_data(conn, stock_code, stock_data):
 
 def main():
     # create_table('000004')
-    data1 = gsd.get_data('000004')
-    data2 = fsd.format_data(data1)
-    insert_data('000004', data2)
+    # data1 = gsd.get_data('000004')
+    # data2 = fsd.format_data(data1)
+    # insert_data('000004', data2)
     # all_company()
     # query_columns('000001', ('name', 'age', 'tel'))
+    conn = connect()
+    print(all_solved_tables(conn))
+    # print(delete_table(conn, '002300'))
 
 
 if __name__ == '__main__':

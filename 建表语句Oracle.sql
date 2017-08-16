@@ -260,6 +260,30 @@ comment on column stock_profit_data.divi is '分红金额（每10股）';
 comment on column stock_profit_data.shares is '转增和送股数（每10股）';
 
 
+--获取业绩预告
+create table stock_forecast
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+type varchar2(10),
+report_date date,
+pre_eps number(20, 4),
+range varchar2(10),
+year varchar2(5),
+quarter varchar2(2)
+);
+comment on table stock_forecast is '业绩预告';
+comment on column stock_forecast.uuid is '主键';
+comment on column stock_forecast.code is '代码';
+comment on column stock_forecast.name is '名称';
+comment on column stock_forecast.type is '业绩变动类型【预增、预亏等】';
+comment on column stock_forecast.report_date is '发布日期';
+comment on column stock_forecast.pre_eps is '上年同期每股收益';
+comment on column stock_forecast.range is '业绩变动范围';
+comment on column stock_forecast.year is '年份';
+comment on column stock_forecast.quarter is '季度';
+
+
 
 
 

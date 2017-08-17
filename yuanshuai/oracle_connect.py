@@ -3,6 +3,7 @@ import cx_Oracle
 import get_stock_data as gsd
 import format_stock_data as fsd
 import time
+import re
 
 
 # 连接数据库
@@ -39,14 +40,14 @@ def delete_table(conn, code):
         print('表STOCK_',code,' 删除失败')
 
 
-# 查看当前所有表
+# 查看当前所有表（即已处理的）
 def all_solved_tables(conn):
     cursor = conn.cursor()
     sql = "select table_name from user_tables"
     rs = cursor.execute(sql)
     result = rs.fetchall()
     tables = [i[0] for i in result]
-    tables.remove('STOCK_BASICS')
+    tables = [i for i in tables if re.match(r'STOCK_\d{6}', i) is not None]  # 用正则筛选交易数据表
     return tables
 
 

@@ -23,7 +23,7 @@ def task(code, start):
     try:
         oc.insert_data(conn, code, data)
     except:
-        oc.trncate_table(conn, code)u
+        oc.truncate_table(conn, code)
     # print(ctime())
     print("股票", code, "结束")
 

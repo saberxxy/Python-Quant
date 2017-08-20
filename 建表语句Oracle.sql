@@ -285,5 +285,25 @@ comment on column stock_forecast.quarter is '季度';
 
 
 
+--获取限售股解禁
+create table stock_xsg
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(20),
+lift_date date,
+count number(20, 4),
+ratio number(20, 4),
+year varchar2(5),
+month varchar2(5)
+);
+comment on table stock_xsg is '限售股解禁';
+comment on column stock_xsg.uuid is '主键';
+comment on column stock_xsg.code is '代码';
+comment on column stock_xsg.name is '名称';
+comment on column stock_xsg.lift_date is '解禁日期';
+comment on column stock_xsg.count is '解禁数量（万股）';
+comment on column stock_xsg.ratio is '占总盘比率';
+comment on column stock_xsg.year is '年份';
+comment on column stock_xsg.month is '月份';
 
 

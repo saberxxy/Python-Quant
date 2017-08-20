@@ -11,12 +11,14 @@ conn = oc.connect()
 
 def task(code, start):
     print("股票", code, "开始")
-    rawData = gsd.get_data(code=code, start='2017-01-01')
+    try:
+        rawData = gsd.get_data(code=code, start=start)
+    except:
+        print("FETCH ERROR=============================")
+        return
     data = fsd.format_data(rawData)
     # print(ctime())
-    if(oc.is_table_exist(conn, code)):  # 如果表已存在，直接插入数据
-        pass
-    else:
+    if not oc.is_table_exist(conn, code):  # 如果表不存在，先创建表
         oc.create_table(conn, code)  # 如果表不存在，先建表
     try:
         oc.insert_data(conn, code, data)
@@ -28,7 +30,8 @@ def task(code, start):
 
 def main():
     # list = gsd.query(conn)
-    list = ['002300', '002301', '002302', '002303', '002304', '002305', '002306', '002307']
+    # list = ['002300', '002301', '002302', '002303', '002304', '002305', '002306', '002307']
+    list = ['002306', '002307']
 
     pool = mp.Pool(processes=8)
     print("开始：================",ctime())
@@ -36,7 +39,7 @@ def main():
     for i in list:
         code = i
         # print(code, type(code))
-        pool.apply_async(task, (code, '2017-01-01'))
+        pool.apply_async(task, (code, '2015-01-01'))
 
     pool.close()
     pool.join()  # 调用join之前，先调用close函数，否则会出错。执行完close后不会有新的进程加入到pool,join函数等待所有子进程结束

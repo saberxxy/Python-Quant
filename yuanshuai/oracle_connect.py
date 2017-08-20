@@ -1,19 +1,28 @@
 # -*- coding:utf-8 -*-
-import cx_Oracle
+import cx_Oracle as cxo
 import get_stock_data as gsd
 import format_stock_data as fsd
 import time
 import re
+import configparser
 
 
 # 连接数据库
 def connect(username='stock', password='123456', host='localhost', port=1521, sid='orcl'):
-    tns = cx_Oracle.makedsn(host, port, sid)
-    con = cx_Oracle.connect(username, password, tns)  # 连接数据库
-    print('connect successfully! the Oracle version:', con.version)  # 打印版本号
+    # tns = cx_Oracle.makedsn(host, port, sid)
+    # con = cx_Oracle.connect(username, password, tns)  # 连接数据库
     # cursor = conn.cursor()  # 创建cursor
     # return cursor
-    return con
+    cf = configparser.ConfigParser()
+    cf.read("..\\config\\config.conf")
+    oracleHost = str(cf.get("oracle", "ip"))
+    oraclePort = int(cf.get("oracle", "port"))
+    oracleUser = str(cf.get("oracle", "username"))
+    oraclePassword = str(cf.get("oracle", "password"))
+    oracleDatabaseName = str(cf.get("oracle", "databasename"))
+    oracleConn = oracleUser + '/' + oraclePassword + '@' + oracleHost + '/' + oracleDatabaseName
+    conn = cxo.connect(oracleConn)
+    return conn
 
 
 # 判断表是否已存在
@@ -155,7 +164,8 @@ def main():
     # all_company()
     # query_columns('000001', ('name', 'age', 'tel'))
     conn = connect()
-    print(all_solved_tables(conn))
+    print(conn)
+    # print(all_solved_tables(conn))
     # print(delete_table(conn, '002300'))
 
 

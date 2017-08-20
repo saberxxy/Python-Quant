@@ -23,7 +23,7 @@ def task(code, start):
     try:
         oc.insert_data(conn, code, data)
     except:
-        oc.delete(conn, code)  # TODO: 插入数据失败则删除表重建,必要吗？？
+        oc.trncate_table(conn, code)u
     # print(ctime())
     print("股票", code, "结束")
 

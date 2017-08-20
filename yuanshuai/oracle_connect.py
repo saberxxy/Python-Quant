@@ -49,6 +49,17 @@ def delete_table(conn, code):
         print('表STOCK_',code,' 删除失败')
 
 
+# 截断表
+def truncate_table(conn, code):
+    table = "STOCK_" + code
+    cursor = conn.cursor()
+    sql = "trancate table "+table
+    try:
+        cursor.execute(sql)
+        conn.commit()
+    except:
+        print('表STOCK_',code,' 删除失败')
+
 # 查看当前所有表（即已处理的）
 def all_solved_tables(conn):
     cursor = conn.cursor()

@@ -14,42 +14,46 @@ def task(code, start):
     try:
         rawData = gsd.get_data(code=code, start=start)
     except:
-        print("FETCH ERROR=============================")
+        # 获取数据异常则直接结束，不建表
+        print("FETCH STOCK %d ERROR" %(code))
         return
     data = fsd.format_data(rawData)
     # print(ctime())
     if not oc.is_table_exist(conn, code):  # 如果表不存在，先创建表
         oc.create_table(conn, code)  # 如果表不存在，先建表
     try:
-        oc.insert_data(conn, code, data)
+        insert_data = oc.insert_data(conn, code, data)
     except:
         oc.truncate_table(conn, code)
+        print("股票", code, "插入异常")
     # print(ctime())
     print("股票", code, "结束")
 
 
 def main():
     # list = gsd.query(conn)
-    # list = ['002300', '002301', '002302', '002303', '002304', '002305', '002306', '002307']
-    list = ['002306', '002307']
+    list = ['002300', '002301', '002302', '002303', '002304', '002305', '002306', '002307']
+    solved_list = oc.all_solved_tables(conn)
+    left_list = set(list).difference(set(solved_list))
+    # left_list = [i for i in list if i not in solved_list]
 
-    pool = mp.Pool(processes=8)
-    print("开始：================",ctime())
+    # list = ['002306', '002307']
 
-    for i in list:
-        code = i
-        # print(code, type(code))
-        pool.apply_async(task, (code, '2015-01-01'))
+    while True:
+        pool = mp.Pool(processes=8)
+        print("程序开始：================",ctime())
 
-    pool.close()
-    pool.join()  # 调用join之前，先调用close函数，否则会出错。执行完close后不会有新的进程加入到pool,join函数等待所有子进程结束
-    print("结束：================", ctime())
+        for i in list:
+            code = i
+            # print(code, type(code))
+            pool.apply_async(task, (code, '2015-01-01'))
 
-        # # 仍有表未处理完，则继续
-        # solved_tables = oc.all_solved_tables(conn)
-        # tmp = [t for t in list if t not in solved_tables]  # 未处理的表
-        # if tmp == []:
-        #     break
+        pool.close()
+        pool.join()  # 调用join之前，先调用close函数，否则会出错。执行完close后不会有新的进程加入到pool,join函数等待所有子进程结束
+        if left_list == []:
+            break
+    print("程序结束：================", ctime())
+    # TODO: HTTP Error 456: tushare限制？网络原因？
 
 
 

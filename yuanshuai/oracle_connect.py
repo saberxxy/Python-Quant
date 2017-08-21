@@ -5,6 +5,7 @@ import format_stock_data as fsd
 import time
 import re
 import configparser
+import string
 
 
 # 连接数据库
@@ -53,22 +54,31 @@ def delete_table(conn, code):
 def truncate_table(conn, code):
     table = "STOCK_" + code
     cursor = conn.cursor()
-    sql = "trancate table "+table
+    sql = "truncate table "+table
     try:
         cursor.execute(sql)
         conn.commit()
     except:
         print('表STOCK_',code,' 删除失败')
 
-# 查看当前所有表（即已处理的）
+
+# 查看当前所有表（即已处理的，可能包含插入一部分数据的）
 def all_solved_tables(conn):
     cursor = conn.cursor()
     sql = "select table_name from user_tables"
     rs = cursor.execute(sql)
     result = rs.fetchall()
     tables = [i[0] for i in result]
-    tables = [i for i in tables if re.match(r'STOCK_\d{6}', i) is not None]  # 用正则筛选交易数据表
-    return tables
+    codes = [i.split('_')[1] for i in tables if re.match(r'STOCK_\d{6}', i) is not None]  # 用正则筛选交易数据表代码
+    for c in codes:
+        table = "STOCK_" + c
+        cursor = conn.cursor()
+        sql = "SELECT count(1) from " + table
+        rs = cursor.execute(sql)
+        row = rs.fetchone()
+        if row[0] < 50: # 行数少于50的视为插入不完整，重新执行
+            codes.remove(c)
+    return codes
 
 
 # 建表
@@ -175,8 +185,10 @@ def main():
     # all_company()
     # query_columns('000001', ('name', 'age', 'tel'))
     conn = connect()
-    print(conn)
-    # print(all_solved_tables(conn))
+    # truncate_table(conn, 'STOCK_002300')
+    # i = count_calc(conn, '002305')
+    # print(i, type(i))
+    print(all_solved_tables(conn))
     # print(delete_table(conn, '002300'))
 
 

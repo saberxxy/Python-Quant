@@ -4,7 +4,7 @@ import format_stock_data as fsd
 import oracle_connect as oc
 import multiprocessing as mp
 from multiprocessing import Process
-from time import ctime
+from time import ctime, sleep
 
 conn = oc.connect()
 
@@ -30,12 +30,40 @@ def task(code, start):
     print("股票", code, "结束")
 
 
-def main():
-    # list = gsd.query(conn)
-    list = ['002301', '002302', '002303', '002304', '002305', '002306', '002307']
+# def main():
+#     # list = gsd.query(conn)
+#     list = ['002301', '002302', '002303', '002304', '002305', '002306', '002307']
+#
+#     # left_list = [i for i in list if i not in solved_list]
+#
+#     # list = ['002306', '002307']
+#     solved_list = oc.all_solved_tables(conn)
+#     left_list = set(list).difference(set(solved_list))
+#     count = 0
+#     while len(left_list) != 0:
+#         count = count + 1
+#         print('left_list: ', left_list)
+#         pool = mp.Pool(processes=8)
+#         print("程序开始：================", ctime())
+#
+#         for i in left_list:
+#             code = i
+#             # print(code, type(code))
+#             pool.apply_async(task, (code, '2015-01-01'))
+#
+#         pool.close()
+#         pool.join()  # 调用join之前，先调用close函数，否则会出错。执行完close后不会有新的进程加入到pool,join函数等待所有子进程结束
+#         solved_list = oc.all_solved_tables(conn)
+#         left_list = set(list).difference(set(solved_list))
+#         if count > 5:
+#             break
+#     print("程序结束：================", ctime())
 
+
+def main():  # 单进程
+    list = gsd.query(conn)
+    # list = ['002301', '002302', '002303', '002304', '002305', '002306', '002307']
     # left_list = [i for i in list if i not in solved_list]
-
     # list = ['002306', '002307']
     solved_list = oc.all_solved_tables(conn)
     left_list = set(list).difference(set(solved_list))
@@ -43,22 +71,16 @@ def main():
     while len(left_list) != 0:
         count = count + 1
         print('left_list: ', left_list)
-        pool = mp.Pool(processes=8)
-        print("程序开始：================",ctime())
-
         for i in left_list:
             code = i
             # print(code, type(code))
-            pool.apply_async(task, (code, '2015-01-01'))
-
-        pool.close()
-        pool.join()  # 调用join之前，先调用close函数，否则会出错。执行完close后不会有新的进程加入到pool,join函数等待所有子进程结束
+            task(code, '2015-01-01')
+            sleep(5)
         solved_list = oc.all_solved_tables(conn)
         left_list = set(list).difference(set(solved_list))
         if count > 5:
             break
     print("程序结束：================", ctime())
-    # TODO: HTTP Error 456: tushare限制？网络原因？
 
 
 if __name__ == '__main__':

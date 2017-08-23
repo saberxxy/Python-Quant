@@ -68,6 +68,7 @@ def main():  # 单进程
     solved_list = oc.all_solved_tables(conn)
     left_list = set(list).difference(set(solved_list))
     count = 0
+    print("程序开始：================", ctime())
     while len(left_list) != 0:
         count = count + 1
         print('left_list: ', left_list)

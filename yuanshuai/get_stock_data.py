@@ -29,7 +29,7 @@ def get_data(code, start=None, end=None, index=False):
     :return:
     """
     end = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    data = ts.get_h_data(code=code, start=start, end=end, index=index)
+    data = ts.get_h_data(code=code, start=start, end=end, index=index, autype='None')
     return data, code
 
 

@@ -335,3 +335,26 @@ comment on column stock_fund_holdings.amount is '基金持股市值';
 comment on column stock_fund_holdings.ratio is '占流通盘比率';
 comment on column stock_fund_holdings.year is '年份';
 comment on column stock_fund_holdings.quarter is '季度';
+
+
+--获取沪市融资融券汇总
+create table stock_sh_margins
+(uuid varchar2(100) primary key,
+op_date date,
+rzye number(20, 4),
+rzmre number(20, 4),
+rqyl number(20, 4),
+rqylje number(20, 4),
+rqmcl number(20, 4),
+rzrqjyzl number(20, 4)
+);
+comment on table stock_sh_margins is '沪市融资融券汇总';
+comment on column stock_sh_margins.uuid is '主键';
+comment on column stock_sh_margins.op_date is '信用交易日期';
+comment on column stock_sh_margins.rzye is '本日融资余额(元)';
+comment on column stock_sh_margins.rzmre is '本日融资买入额(元)';
+comment on column stock_sh_margins.rqyl is '本日融券余量';
+comment on column stock_sh_margins.rqylje is '本日融券余量金额(元)';
+comment on column stock_sh_margins.rqmcl is '本日融券卖出量';
+comment on column stock_sh_margins.rzrqjyzl is '本日融资融券余额(元)';
+

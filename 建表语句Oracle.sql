@@ -307,3 +307,31 @@ comment on column stock_xsg.year is '年份';
 comment on column stock_xsg.month is '月份';
 
 
+--获取基金持股
+create table stock_fund_holdings
+(uuid varchar2(100) primary key,
+code varchar2(10), 
+name varchar2(50),
+report_date date,
+nums number(20, 4),
+nlast number(20, 4),
+count number(20, 4),
+clast number(20, 4),
+amount number(20, 4),
+ratio number(20, 4),
+year varchar2(5),
+quarter varchar2(5)
+);
+comment on table stock_fund_holdings is '基金持股';
+comment on column stock_fund_holdings.uuid is '主键';
+comment on column stock_fund_holdings.code is '代码';
+comment on column stock_fund_holdings.name is '名称';
+comment on column stock_fund_holdings.report_date is '报告日期';
+comment on column stock_fund_holdings.nums is '基金家数';
+comment on column stock_fund_holdings.nlast is '与上期相比（增加或减少了）';
+comment on column stock_fund_holdings.count is '基金持股数（万股）';
+comment on column stock_fund_holdings.clast is '与上期相比';
+comment on column stock_fund_holdings.amount is '基金持股市值';
+comment on column stock_fund_holdings.ratio is '占流通盘比率';
+comment on column stock_fund_holdings.year is '年份';
+comment on column stock_fund_holdings.quarter is '季度';

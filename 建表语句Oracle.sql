@@ -358,3 +358,28 @@ comment on column stock_sh_margins.rqylje is '本日融券余量金额(元)';
 comment on column stock_sh_margins.rqmcl is '本日融券卖出量';
 comment on column stock_sh_margins.rzrqjyzl is '本日融资融券余额(元)';
 
+
+--获取沪市融资融券明细
+create table stock_sh_margin_details
+(uuid varchar2(100) primary key,
+op_date date,
+code varchar2(10), 
+name varchar2(50), 
+rzye number(20, 4),
+rzmre number(20, 4),
+rzche number(20, 4),
+rqyl number(20, 4),
+rqmcl number(20, 4),
+rqchl number(20, 4)
+);
+comment on table stock_sh_margin_details is '沪市融资融券明细';
+comment on column stock_sh_margin_details.uuid is '主键';
+comment on column stock_sh_margin_details.op_date is '信用交易日期';
+comment on column stock_sh_margin_details.code is '标的证券代码';
+comment on column stock_sh_margin_details.name is '标的证券名称';
+comment on column stock_sh_margin_details.rzye is '本日融资余额(元)';
+comment on column stock_sh_margin_details.rzmre is '本日融资买入额(元)';
+comment on column stock_sh_margin_details.rzche is '本日融资偿还额(元)';
+comment on column stock_sh_margin_details.rqyl is '本日融券余量';
+comment on column stock_sh_margin_details.rqmcl is '本日融券卖出量';
+comment on column stock_sh_margin_details.rqchl is '本日融券偿还量';

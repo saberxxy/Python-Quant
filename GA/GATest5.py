@@ -6,22 +6,16 @@
 
 import numpy as np
 
-TARGET_PHRASE = "Books is not only used to read the text, but also the tools to " \
-                "adjust my own feelings. When not in the state, I won't see the contents of the book. " \
-                "At that time I will cogitate what is blocking my reading indeed. There are also some " \
-                "books that can be reading without hindrance even I was not in good condition, " \
-                "I'll thinking the reason. That is the harmony of spirit, somewhat similar to the tune. " \
-                "The most important thing to reconcile is the tactile impression of the paper, " \
-                "and the feel of stimulation to brain when turning pages."       # target DNA
+TARGET_PHRASE = "Books is not only used to read the text."       # target DNA
 
-POP_SIZE = 300                      # population size
+POP_SIZE = 1000                      # population size
 CROSS_RATE = 0.4                    # mating probability (DNA crossover)
 MUTATION_RATE = 0.01                # mutation probability
 N_GENERATIONS = 999999999999999
 
 DNA_SIZE = len(TARGET_PHRASE)
 TARGET_ASCII = np.fromstring(TARGET_PHRASE, dtype=np.uint8)  # convert string to number
-ASCII_BOUND = [0, 127]
+ASCII_BOUND = [32, 126]
 
 
 class GA(object):

@@ -58,7 +58,7 @@ def getCSV(code, url):
     saveInDB(code)
     print("一只股票入库完毕")
     # 删除CSV文件
-    os.remove(fordername+filename)
+    # os.remove(fordername+filename)
 
 
 
@@ -85,6 +85,9 @@ def saveInDB(code):
     for l in range(0, dfLen):
         uuidList.append(uuid.uuid1())
     df['uuid'] = uuidList
+
+    # 处理None
+    df = df.replace('None', 0)
 
     # 转浮点数
     amountList = []
@@ -227,7 +230,7 @@ if __name__ == '__main__':
 #=======================================================
     time1 = time.time()
     dict = listStock(cursor)
-    pool = Pool(processes = 15)  # 设定并发进程的数量
+    pool = Pool(processes = 20)  # 设定并发进程的数量
     for key in dict:
         pool.apply_async(main, (key, dict[key], ))
 
@@ -236,3 +239,4 @@ if __name__ == '__main__':
 
     time2 = time.time()
     print((time2 - time1) / 60, u"分钟")
+

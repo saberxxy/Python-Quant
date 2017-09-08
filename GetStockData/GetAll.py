@@ -4,18 +4,14 @@
 import urllib
 import urllib.request
 from urllib import request
-from bs4 import BeautifulSoup
-import tushare as ts
 import uuid
-from sqlalchemy import create_engine
-import cx_Oracle as cxo
-import configparser
 import pandas as pd
-import re
 import time
 from multiprocessing import Pool
 import uuid
 import os
+import numpy as np
+import cProfile
 
 
 # 导入连接文件
@@ -56,7 +52,8 @@ def getCSV(code, url):
             outfile.write(web.read())
 
     saveInDB(code)
-    print("一只股票入库完毕")
+    print(code)
+    # print("一只股票入库完毕")
     # 删除CSV文件
     # os.remove(fordername+filename)
 
@@ -73,7 +70,7 @@ def saveInDB(code):
     # 解析CSV文件并数据清洗
     fordername = 'AllStockData\\'
     filename = str(code) + '.CSV'
-    df = pd.read_csv(fordername+filename, encoding='gbk')
+    df = pd.read_csv(fordername + filename, encoding='gbk')
     df.rename(columns={u'日期': 'date', u'股票代码': 'code', u'名称': 'name', u'收盘价': 'close', u'最高价': 'high',
                        u'最低价': 'low', u'开盘价': 'open', u'前收盘': 'y_close', u'涨跌额': 'p_change', u'涨跌幅': 'p_change_rate',
                        u'换手率': 'turnover', u'成交量': 'volume', u'成交金额': 'amount', u'总市值': 'marketcap',
@@ -81,29 +78,15 @@ def saveInDB(code):
     df['code'] = code
     df['classify'] = get_type(code)
     dfLen = len(df)
-    uuidList = []  # 添加uuid
-    for l in range(0, dfLen):
-        uuidList.append(uuid.uuid1())
-    df['uuid'] = uuidList
+    df['uuid'] = [uuid.uuid1() for l in range(0, dfLen)]  # 添加uuid
 
     # 处理None
     df = df.replace('None', 0)
 
     # 转浮点数
-    amountList = []
-    for x in df['amount']:
-        amountList.append(as_num(x))
-    df['amount'] = amountList
-
-    marketcapList = []
-    for y in df['marketcap']:
-        marketcapList.append(as_num(y))
-    df['marketcap'] = marketcapList
-
-    famcList = []
-    for z in df['famc']:
-        famcList.append(as_num(z))
-    df['famc'] = famcList
+    df['amount'] = [as_num(x) for x in df['amount']]
+    df['marketcap'] = [as_num(y) for y in df['marketcap']]
+    df['famc'] = [as_num(z) for z in df['famc']]
 
     # 入库
     try:
@@ -221,22 +204,39 @@ def is_table_exist(code):
     return tables.__contains__(table)
 
 
-def main(key, url):
-    getCSV(key, url)
-
-
-if __name__ == '__main__':
-
-#=======================================================
+# 单进程
+def main2():
     time1 = time.time()
     dict = listStock(cursor)
-    pool = Pool(processes = 20)  # 设定并发进程的数量
     for key in dict:
-        pool.apply_async(main, (key, dict[key], ))
+        getCSV(key, dict[key])
 
     pool.close()
     pool.join()
 
     time2 = time.time()
     print((time2 - time1) / 60, u"分钟")
+
+
+# 多进程
+def main():
+    time1 = time.time()
+    dict = listStock(cursor)
+    pool = Pool(processes=15)  # 设定并发进程的数量
+    for key in dict:
+        pool.apply_async(getCSV, (key, dict[key],))
+
+    pool.close()
+    pool.join()
+
+    time2 = time.time()
+    print((time2 - time1) / 60, u"分钟")
+
+
+if __name__ == '__main__':
+    main()
+#=======================================================
+
+
+
 

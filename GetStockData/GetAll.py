@@ -26,16 +26,19 @@ cursor = conn.getConfig()
 # 列出所有股票代码及名称，并存入dictionary
 def listStock(cursor):
     dict1 = {}  #存放开头为6的股票代码及访问链接
+    systemTime = str(time.strftime('%Y%m%d', time.localtime(time.time())))
     cursor.execute("select code from stock_basics where code like '6%'")
     pdata1 = cursor.fetchall()
     for i in pdata1:
-        dict1[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=0' + str(i[0]) + '&start=19900101&end=20201231'
+        dict1[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=0' + str(i[0]) + \
+                      '&start=19900101&end=' + systemTime
 
     dict2 = {}  # 存放开头不为6的股票代码及访问链接
     cursor.execute("select code from stock_basics where code not like '6%'")
     pdata2 = cursor.fetchall()
     for i in pdata2:
-        dict2[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=1' + str(i[0]) + '&start=19900101&end=20201231'
+        dict2[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=1' + str(i[0]) + \
+                      '&start=19900101&end=' + systemTime
 
     # 合并两个字典
     dict3 = dict(dict1, **dict2)

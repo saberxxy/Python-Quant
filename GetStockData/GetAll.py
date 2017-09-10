@@ -29,13 +29,13 @@ def listStock(cursor):
     cursor.execute("select code from stock_basics where code like '6%'")
     pdata1 = cursor.fetchall()
     for i in pdata1:
-        dict1[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=0' + str(i[0]) + '&start=19900101&end=20171231'
+        dict1[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=0' + str(i[0]) + '&start=19900101&end=20201231'
 
     dict2 = {}  # 存放开头不为6的股票代码及访问链接
     cursor.execute("select code from stock_basics where code not like '6%'")
     pdata2 = cursor.fetchall()
     for i in pdata2:
-        dict2[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=1' + str(i[0]) + '&start=19900101&end=20171231'
+        dict2[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=1' + str(i[0]) + '&start=19900101&end=20201231'
 
     # 合并两个字典
     dict3 = dict(dict1, **dict2)
@@ -71,7 +71,7 @@ def saveInDB(code):
     fordername = 'AllStockData\\'
     filename = str(code) + '.CSV'
     df = pd.read_csv(fordername + filename, encoding='gbk')
-    df.rename(columns={u'日期': 'date', u'股票代码': 'code', u'名称': 'name', u'收盘价': 'close', u'最高价': 'high',
+    df.rename(columns={u'日期': 'sdate', u'股票代码': 'code', u'名称': 'name', u'收盘价': 'close', u'最高价': 'high',
                        u'最低价': 'low', u'开盘价': 'open', u'前收盘': 'y_close', u'涨跌额': 'p_change', u'涨跌幅': 'p_change_rate',
                        u'换手率': 'turnover', u'成交量': 'volume', u'成交金额': 'amount', u'总市值': 'marketcap',
                        u'流通市值': 'famc', u'成交笔数': 'zbs'}, inplace=True)
@@ -92,14 +92,14 @@ def saveInDB(code):
     try:
         for k in range(0, dfLen):
             df2 = df[k:k + 1]
-            sql = "insert into stock_"+str(code)+"(uuid, \"DATE\", code, name, classify, open, close, high, low," \
+            sql = "insert into stock_"+str(code)+"(uuid, sdate, code, name, classify, open, close, high, low," \
               "volume, amount, y_close, p_change, p_change_rate, turnover, marketcap, famc, zbs) " \
-              "values(:uuid, to_date(:datex, 'yyyy-MM-dd'), :code, :name, :classify, :open, :close, :high, :low, " \
+              "values(:uuid, to_date(:sdate, 'yyyy-MM-dd'), :code, :name, :classify, :open, :close, :high, :low, " \
               ":volume, :amount, :y_close, :p_change, :p_change_rate, :turnover, :marketcap, :famc, :zbs)"
 
             cursor.execute(  sql,
                          ( str(list(df2['uuid'])[0]),
-                           str(list(df2['date'])[0]),
+                           str(list(df2['sdate'])[0]),
                            str(list(df2['code'])[0]),
                            str(list(df2['name'])[0]),
                            str(list(df2['classify'])[0]),
@@ -118,7 +118,7 @@ def saveInDB(code):
                            round(float(df2['zbs']), 4)
                          )
                       )
-            cursor.execute("commit")
+        cursor.execute("commit")
     except Exception:
         pass
 
@@ -150,7 +150,7 @@ def create_table(code):
     sql = "CREATE TABLE STOCK_" + code + """
     (
             UUID VARCHAR2(80) PRIMARY KEY,
-            "DATE" DATE,
+            SDATE DATE,
             CODE VARCHAR2(20),
             NAME VARCHAR2(80),
             CLASSIFY VARCHAR(80),
@@ -173,7 +173,7 @@ def create_table(code):
     # 添加注释
     comments = ["COMMENT ON TABLE STOCK_" + code + " IS '" + code + "'",  # 表注释
                 "COMMENT ON COLUMN STOCK_" + code + ".UUID IS 'UUID'",
-                "COMMENT ON COLUMN STOCK_" + code + ".\"DATE\" IS '日期'",
+                "COMMENT ON COLUMN STOCK_" + code + ".SDATE IS '日期'",
                 "COMMENT ON COLUMN STOCK_" + code + ".CODE IS '股票代码'",
                 "COMMENT ON COLUMN STOCK_" + code + ".NAME IS '股票名称'",
                 "COMMENT ON COLUMN STOCK_" + code + ".CLASSIFY IS '类别'",

@@ -4,18 +4,14 @@
 import urllib
 import urllib.request
 from urllib import request
-from bs4 import BeautifulSoup
-import tushare as ts
 import uuid
-from sqlalchemy import create_engine
-import cx_Oracle as cxo
-import configparser
 import pandas as pd
-import re
 import time
 from multiprocessing import Pool
 import uuid
 import os
+import numpy as np
+import cProfile
 
 
 # 导入连接文件
@@ -30,18 +26,19 @@ cursor = conn.getConfig()
 # 列出所有股票代码及名称，并存入dictionary
 def listStock(cursor):
     dict1 = {}  #存放开头为6的股票代码及访问链接
+    systemTime = str(time.strftime('%Y%m%d', time.localtime(time.time())))
     cursor.execute("select code from stock_basics where code like '6%'")
     pdata1 = cursor.fetchall()
     for i in pdata1:
-        print(i)
-        print(i["code"])
-        dict1[i["code"]] = 'http://quotes.money.163.com/service/chddata.html?code=0' + str(i["code"]) + '&start=19900101&end=20171231'
+        dict1[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=0' + str(i[0]) + \
+                      '&start=19900101&end=' + systemTime
 
     dict2 = {}  # 存放开头不为6的股票代码及访问链接
     cursor.execute("select code from stock_basics where code not like '6%'")
     pdata2 = cursor.fetchall()
     for i in pdata2:
-        dict2[i["code"]] = 'http://quotes.money.163.com/service/chddata.html?code=1' + str(i["code"]) + '&start=19900101&end=20171231'
+        dict2[i[0]] = 'http://quotes.money.163.com/service/chddata.html?code=1' + str(i[0]) + \
+                      '&start=19900101&end=' + systemTime
 
     # 合并两个字典
     dict3 = dict(dict1, **dict2)
@@ -59,9 +56,10 @@ def getCSV(code, url):
 #            outfile.write(web.read())
 #            print("write OK "+str(code))
     saveInDB(code)
-    print("一只股票入库完毕")
+    print(code)
+    # print("一只股票入库完毕")
     # 删除CSV文件
-    #os.remove(fordername+filename)
+    # os.remove(fordername+filename)
 
 
 
@@ -78,69 +76,36 @@ def saveInDB(code):
     # 解析CSV文件并数据清洗
     fordername = 'AllStockData'+os.path.sep
     filename = str(code) + '.CSV'
-    df = pd.read_csv(fordername+filename, encoding='gbk')
-    df.rename(columns={u'日期': 'date', u'股票代码': 'code', u'名称': 'name', u'收盘价': 'close', u'最高价': 'high',
+    df = pd.read_csv(fordername + filename, encoding='gbk')
+    df.rename(columns={u'日期': 'sdate', u'股票代码': 'code', u'名称': 'name', u'收盘价': 'close', u'最高价': 'high',
                        u'最低价': 'low', u'开盘价': 'open', u'前收盘': 'y_close', u'涨跌额': 'p_change', u'涨跌幅': 'p_change_rate',
                        u'换手率': 'turnover', u'成交量': 'volume', u'成交金额': 'amount', u'总市值': 'marketcap',
                        u'流通市值': 'famc', u'成交笔数': 'zbs'}, inplace=True)
     df['code'] = code
     df['classify'] = get_type(code)
     dfLen = len(df)
-    uuidList = []  # 添加uuid
-    for l in range(0, dfLen):
-        uuidList.append(uuid.uuid1())
-    df['uuid'] = uuidList
+    df['uuid'] = [uuid.uuid1() for l in range(0, dfLen)]  # 添加uuid
+
+    # 处理None
+    df = df.replace('None', 0)
 
     # 转浮点数
-    amountList = []
-    for x in df['amount']:
-        amountList.append(as_num(x))
-    df['amount'] = amountList
-
-    marketcapList = []
-    for y in df['marketcap']:
-        marketcapList.append(as_num(y))
-    df['marketcap'] = marketcapList
-
-    famcList = []
-    for z in df['famc']:
-        famcList.append(as_num(z))
-    df['famc'] = famcList
+    df['amount'] = [as_num(x) for x in df['amount']]
+    df['marketcap'] = [as_num(y) for y in df['marketcap']]
+    df['famc'] = [as_num(z) for z in df['famc']]
 
     # 入库
     try:
         for k in range(0, dfLen):
             df2 = df[k:k + 1]
-            sql = "insert into stock_"+str(code)+"(uuid, `DATE`, code, name, classify, open, close, high, low," \
+            sql = "insert into stock_"+str(code)+"(uuid, sdate, code, name, classify, open, close, high, low," \
               "volume, amount, y_close, p_change, p_change_rate, turnover, marketcap, famc, zbs) " \
-              "values('%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', " \
-              "'%d', '%d' , '%d', '%d','%d', '%d','%d','%d','%d')"
-
-            print(  sql,
-                         ( str(list(df2['uuid'])[0]),
-                           str(list(df2['date'])[0]),
-                           str(list(df2['code'])[0]),
-                           str(list(df2['name'])[0]),
-                           str(list(df2['classify'])[0]),
-                           round(float(df2['open']), 4),
-                           round(float(df2['close']), 4),
-                           round(float(df2['high']), 4),
-                           round(float(df2['low']), 4),
-                           round(float(df2['volume']), 4),
-                           round(float(df2['amount']), 4),
-                           round(float(df2['y_close']), 4),
-                           round(float(df2['p_change']), 4),
-                           round(float(df2['p_change_rate']), 4),
-                           round(float(df2['turnover']), 4),
-                           round(float(df2['marketcap']), 4),
-                           round(float(df2['famc']), 4),
-                           round(float(df2['zbs']), 4)
-                         )
-                      )
+              "values(:uuid, to_date(:sdate, 'yyyy-MM-dd'), :code, :name, :classify, :open, :close, :high, :low, " \
+              ":volume, :amount, :y_close, :p_change, :p_change_rate, :turnover, :marketcap, :famc, :zbs)"
 
             cursor.execute(  sql,
                          ( str(list(df2['uuid'])[0]),
-                           str(list(df2['date'])[0]),
+                           str(list(df2['sdate'])[0]),
                            str(list(df2['code'])[0]),
                            str(list(df2['name'])[0]),
                            str(list(df2['classify'])[0]),
@@ -159,10 +124,9 @@ def saveInDB(code):
                            round(float(df2['zbs']), 4)
                          )
                       )
-            cursor.execute("commit")
-    except Exception as e:
+        cursor.execute("commit")
+    except Exception:
         pass
-        print(e)
 
 
 
@@ -192,10 +156,10 @@ def get_type(code):
 def create_table(code):
     sql = "CREATE TABLE STOCK_" + code + """
     (
-            UUID VARCHAR(80) PRIMARY KEY,
-            `DATE` DATE,
-            CODE VARCHAR(20),
-            NAME VARCHAR(80),
+            UUID VARCHAR2(80) PRIMARY KEY,
+            SDATE DATE,
+            CODE VARCHAR2(20),
+            NAME VARCHAR2(80),
             CLASSIFY VARCHAR(80),
             OPEN decimal(20, 4),
             CLOSE decimal(20, 4),
@@ -215,27 +179,27 @@ def create_table(code):
     print(sql)
     cursor.execute(sql)
     # 添加注释
-#    comments = ["COMMENT ON TABLE STOCK_" + code + " IS '" + code + "'",  # 表注释
-#                "COMMENT ON COLUMN STOCK_" + code + ".UUID IS 'UUID'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".\"DATE\" IS '日期'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".CODE IS '股票代码'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".NAME IS '股票名称'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".CLASSIFY IS '类别'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".OPEN IS '开盘价'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".CLOSE IS '收盘价'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".HIGH IS '最高价'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".LOW IS '最低价'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".VOLUME IS '成交量'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".AMOUNT IS '成交金额'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".Y_CLOSE IS '昨收盘'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".P_CHANGE IS '涨跌额'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".P_CHANGE_RATE IS '涨跌幅'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".TURNOVER IS '换手率'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".MARKETCAP IS '总市值'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".FAMC IS '流通市值'",
-#                "COMMENT ON COLUMN STOCK_" + code + ".ZBS IS '成交笔数'" ]
-#    for i in comments:
-#       cursor.execute(i)
+    comments = ["COMMENT ON TABLE STOCK_" + code + " IS '" + code + "'",  # 表注释
+                "COMMENT ON COLUMN STOCK_" + code + ".UUID IS 'UUID'",
+                "COMMENT ON COLUMN STOCK_" + code + ".SDATE IS '日期'",
+                "COMMENT ON COLUMN STOCK_" + code + ".CODE IS '股票代码'",
+                "COMMENT ON COLUMN STOCK_" + code + ".NAME IS '股票名称'",
+                "COMMENT ON COLUMN STOCK_" + code + ".CLASSIFY IS '类别'",
+                "COMMENT ON COLUMN STOCK_" + code + ".OPEN IS '开盘价'",
+                "COMMENT ON COLUMN STOCK_" + code + ".CLOSE IS '收盘价'",
+                "COMMENT ON COLUMN STOCK_" + code + ".HIGH IS '最高价'",
+                "COMMENT ON COLUMN STOCK_" + code + ".LOW IS '最低价'",
+                "COMMENT ON COLUMN STOCK_" + code + ".VOLUME IS '成交量'",
+                "COMMENT ON COLUMN STOCK_" + code + ".AMOUNT IS '成交金额'",
+                "COMMENT ON COLUMN STOCK_" + code + ".Y_CLOSE IS '昨收盘'",
+                "COMMENT ON COLUMN STOCK_" + code + ".P_CHANGE IS '涨跌额'",
+                "COMMENT ON COLUMN STOCK_" + code + ".P_CHANGE_RATE IS '涨跌幅'",
+                "COMMENT ON COLUMN STOCK_" + code + ".TURNOVER IS '换手率'",
+                "COMMENT ON COLUMN STOCK_" + code + ".MARKETCAP IS '总市值'",
+                "COMMENT ON COLUMN STOCK_" + code + ".FAMC IS '流通市值'",
+                "COMMENT ON COLUMN STOCK_" + code + ".ZBS IS '成交笔数'" ]
+    for i in comments:
+        cursor.execute(i)
 
 
 # 判断表是否已存在
@@ -253,21 +217,39 @@ def is_table_exist(code):
         ptint(table+"false")
 
 
-def main(key, url):
-    getCSV(key, url)
-
-
-if __name__ == '__main__':
-
-#=======================================================
+# 单进程
+def main2():
     time1 = time.time()
     dict = listStock(cursor)
-    pool = Pool(processes = 15)  # 设定并发进程的数量
     for key in dict:
-        pool.apply_async(main, (key, dict[key], ))
+        getCSV(key, dict[key])
 
     pool.close()
     pool.join()
 
     time2 = time.time()
     print((time2 - time1) / 60, u"分钟")
+
+
+# 多进程
+def main():
+    time1 = time.time()
+    dict = listStock(cursor)
+    pool = Pool(processes=15)  # 设定并发进程的数量
+    for key in dict:
+        pool.apply_async(getCSV, (key, dict[key],))
+
+    pool.close()
+    pool.join()
+
+    time2 = time.time()
+    print((time2 - time1) / 60, u"分钟")
+
+
+if __name__ == '__main__':
+    main()
+#=======================================================
+
+
+
+

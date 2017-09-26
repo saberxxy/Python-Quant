@@ -67,7 +67,22 @@ def getBasics(cursor):
         stockNprDB = round(float(stockNpr[i]), 4)
         stockHoldersDB = round(float(stockHolders[i]), 4)
 
-        try:
+        if timeToMarketDB == '0--':
+            cursor.execute("insert into stock_basics(code, name, industry, area, pe, outstanding, "
+                           "totals, totalAssets, liquidAssets, fixedAssets, reserved, "
+                           "reservedPerShare, esp, bvps, pb, undp, "
+                           "perundp, rev, profit, gpr, npr, holders)"
+                           "values('%s', '%s', '%s', '%s', '%f', '%f', "
+                           "'%f', '%f', '%f', '%f', '%f', "
+                           "'%f', '%f', '%f', '%f', '%f', "
+                           "'%f', '%f', '%f', '%f', '%f', '%f')"
+                           % (stockCodeDB, stockNameDB, stockIndustryDB, stockAreaDB, stockPeDB, stockOutstandingDB,
+                            stockTotalsDB, stockTotalAssetsDB, stockLiquidAssetsDB, stockFixedAssetsDB,stockReservedDB,
+                            stockReservedPerShareDB, stockEspDB, stockBvpsDB, stockPbDB, stockUndpDB,
+                            stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB) )
+            cursor.execute("commit")
+            print("已存入  ", i)
+        else:
             cursor.execute("insert into stock_basics(code, name, industry, area, pe, outstanding, "
                        "totals, totalAssets, liquidAssets, fixedAssets, reserved, "
                        "reservedPerShare, esp, bvps, pb, timeToMarket, undp, "
@@ -82,8 +97,6 @@ def getBasics(cursor):
                         stockPerundpDB, stockRevDB, stockProfitDB, stockGprDB, stockNprDB, stockHoldersDB))
             cursor.execute("commit")
             print("已存入  ", i)
-        except Exception:
-            pass
 
 
 # 检查表中是否存在数据

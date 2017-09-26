@@ -17,7 +17,7 @@ import cProfile
 # 导入连接文件
 import sys
 sys.path.append("..")
-import common.GetMysqlConn as conn
+import common.GetOracleConn as conn
 
 # 获取全局数据库连接
 cursor = conn.getConfig()
@@ -47,14 +47,13 @@ def listStock(cursor):
 
 # 通过网易财经获取全量数据的CSV文件
 def getCSV(code, url):
-#    fordername = 'AllStockData'+os.path.sep
-#    filename = str(code) + '.CSV'
-#    with request.urlopen(url) as web:
-#        # 为防止编码错误，使用二进制写文件模式
-#        print(web)
-#        with open(fordername+filename, 'wb') as outfile:
-#            outfile.write(web.read())
-#            print("write OK "+str(code))
+    fordername = 'AllStockData\\'
+    filename = str(code) + '.CSV'
+    with request.urlopen(url) as web:
+        # 为防止编码错误，使用二进制写文件模式
+        with open(fordername+filename, 'wb') as outfile:
+            outfile.write(web.read())
+
     saveInDB(code)
     print(code)
     # print("一只股票入库完毕")
@@ -67,14 +66,12 @@ def getCSV(code, url):
 def saveInDB(code):
     # 建表
     if not is_table_exist(code):  # 如果表不存在，先创建表
-        print("not_exist")
         create_table(code)  # 如果表不存在，先建表
     else:  # 存在则截断
-        print("exist")
         cursor.execute("truncate table stock_" + code)
 
     # 解析CSV文件并数据清洗
-    fordername = 'AllStockData'+os.path.sep
+    fordername = 'AllStockData\\'
     filename = str(code) + '.CSV'
     df = pd.read_csv(fordername + filename, encoding='gbk')
     df.rename(columns={u'日期': 'sdate', u'股票代码': 'code', u'名称': 'name', u'收盘价': 'close', u'最高价': 'high',
@@ -130,7 +127,6 @@ def saveInDB(code):
 
 
 
-
 # 将科学记数法化为浮点数
 def as_num(x):
     y = '{:.4f}'.format(x)  # 4f表示保留4位小数点的float型
@@ -161,22 +157,21 @@ def create_table(code):
             CODE VARCHAR2(20),
             NAME VARCHAR2(80),
             CLASSIFY VARCHAR(80),
-            OPEN decimal(20, 4),
-            CLOSE decimal(20, 4),
-            HIGH decimal(20, 4),
-            LOW decimal(20, 4),
-            VOLUME decimal(20, 4),
-            AMOUNT decimal(20, 4),
-            Y_CLOSE decimal(20, 4),
-            P_CHANGE decimal(20, 4),
-            P_CHANGE_RATE decimal(20, 4),
-            TURNOVER decimal(20, 4),
-            MARKETCAP decimal(30, 4),
-            FAMC decimal(30, 4),
-            ZBS decimal(20, 4)
+            OPEN NUMBER(20, 4),
+            CLOSE NUMBER(20, 4),
+            HIGH NUMBER(20, 4),
+            LOW NUMBER(20, 4),
+            VOLUME NUMBER(20, 4),
+            AMOUNT NUMBER(20, 4),
+            Y_CLOSE NUMBER(20, 4),
+            P_CHANGE NUMBER(20, 4),
+            P_CHANGE_RATE NUMBER(20, 4),
+            TURNOVER NUMBER(20, 4),
+            MARKETCAP NUMBER(30, 4),
+            FAMC NUMBER(30, 4),
+            ZBS NUMBER(20, 4)
         )
     """
-    print(sql)
     cursor.execute(sql)
     # 添加注释
     comments = ["COMMENT ON TABLE STOCK_" + code + " IS '" + code + "'",  # 表注释
@@ -205,16 +200,11 @@ def create_table(code):
 # 判断表是否已存在
 def is_table_exist(code):
     table = "STOCK_" + code
-    sql = "show tables like  '%s' " %table
+    sql = "select table_name from user_tables"
     rs = cursor.execute(sql)
-    result = cursor.fetchall()
-    print(result)
-    if len(result) > 0:
-        return True
-        ptint(table+"True")
-    else:
-        return False
-        ptint(table+"false")
+    result = rs.fetchall()
+    tables = [i[0] for i in result]
+    return tables.__contains__(table)
 
 
 # 单进程
@@ -249,6 +239,7 @@ def main():
 if __name__ == '__main__':
     main()
 #=======================================================
+
 
 
 

@@ -41,32 +41,33 @@ def getMinDataInc(cons, codes, systemTime):
 
 #插入数据
 def insertDataInc(cons, i, startTime, endTime):
-    # 分钟数据, 设置freq参数，分别为1min/5min/15min/30min/60min，D(日)/W(周)/M(月)/Q(季)/Y(年)
-    df = ts.bar(i, conn=cons, freq='1min', ma=[5, 10, 20, 60],
-                start_date=str(startTime), end_date=str(endTime))
-    dfMin = pd.DataFrame()
-    dfMin['code'] = df['code']
-    dfMin['time'] = df.index
-    # 转浮点数
-    dfMin['open'] = [as_num(x) for x in df['open']]
-
-    dfMin['close'] = df['close']
-    dfMin['high'] = df['high']
-    dfMin['low'] = df['low']
-    dfMin['vol'] = df['vol']
-    dfMin['amount'] = df['amount']
-    dfMin['ma5'] = df['ma5']
-    dfMin['ma10'] = df['ma10']
-    dfMin['ma20'] = df['ma20']
-    dfMin['ma60'] = df['ma60']
-
-    dfLen = len(dfMin)
-    dfMin['uuid'] = [uuid.uuid1() for l in range(0, dfLen)]  # 添加uuid
-
-    # 处理None
-    dfMin = dfMin.replace('None', 0)
-
     try:
+        # 分钟数据, 设置freq参数，分别为1min/5min/15min/30min/60min，D(日)/W(周)/M(月)/Q(季)/Y(年)
+        df = ts.bar(i, conn=cons, freq='1min', ma=[5, 10, 20, 60],
+                    start_date=str(startTime), end_date=str(endTime))
+        dfMin = pd.DataFrame()
+        dfMin['code'] = df['code']
+        dfMin['time'] = df.index
+        # 转浮点数
+        dfMin['open'] = [as_num(x) for x in df['open']]
+
+        dfMin['close'] = df['close']
+        dfMin['high'] = df['high']
+        dfMin['low'] = df['low']
+        dfMin['vol'] = df['vol']
+        dfMin['amount'] = df['amount']
+        dfMin['ma5'] = df['ma5']
+        dfMin['ma10'] = df['ma10']
+        dfMin['ma20'] = df['ma20']
+        dfMin['ma60'] = df['ma60']
+
+        dfLen = len(dfMin)
+        dfMin['uuid'] = [uuid.uuid1() for l in range(0, dfLen)]  # 添加uuid
+
+        # 处理None
+        dfMin = dfMin.replace('None', 0)
+
+
         for k in range(0, dfLen):
             df2 = dfMin[k:k + 1]
             sql = "insert into stock_" + str(

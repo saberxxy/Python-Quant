@@ -78,10 +78,10 @@ def getCSV(code, url):
 def saveInDB(code,cursor):
     # 建表
     if not is_table_exist(code,cursor):  # 如果表不存在，先创建表
-        #print("not_exist")
+        print(cursor,"not_exist")
         create_table(code,cursor)  # 如果表不存在，先建表
     else:  # 存在则截断
-        #print("exist")
+        print(cursor,"exist")
         cursor.execute("truncate table stock_" + code)
         cursor.execute("commit")
 
@@ -214,7 +214,7 @@ def get_type(code):
     return switcher.get(code_pre, '未知')
 
 # 建表
-def create_table(code):
+def create_table(code,cursor):
     sql = "CREATE TABLE stock_" + code + """
     (
             UUID VARCHAR(80) PRIMARY KEY,
@@ -237,7 +237,7 @@ def create_table(code):
             ZBS decimal(20, 4)
         )
     """
-    #print(sql)
+    print(sql)
     cursor.execute(sql)
     cursor.execute('commit')
     # 添加注释
@@ -268,16 +268,16 @@ def create_table(code):
 def is_table_exist(code,cursor):
     table = "stock_" + code
     sql = " select TABLE_NAME from INFORMATION_SCHEMA.TABLES where  TABLE_NAME='%s' " %table
-    #print(sql)
+    print(sql)
     rs = cursor.execute(sql)
     result = cursor.fetchall()
     #print(result)
     if len(result) > 0:
         return True
-        #ptint(table+"True")
+        ptint(table+"True")
     else:
         return False
-        #ptint(table+"false")
+        ptint(table+"false")
 
 
 def main(key, url):

@@ -12,8 +12,11 @@ import os
 import xml.sax
 import pandas as pd
 
-url = "http://data.funds.hexun.com/outxml/detail/openfundnetvalue.aspx?" \
-      "fundcode=040035&startdate=2008-10-31&enddate=2018-01-31"
+# # 基金代码
+# # 110022，180012，090013，320010，002001，003188
+# code = "090013"
+# url = "http://data.funds.hexun.com/outxml/detail/openfundnetvalue.aspx?" \
+#       "fundcode="+code+"&startdate=2018-01-01&enddate=2018-03-31"
 
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -52,12 +55,18 @@ def saveCsv(soup):
     fundData['unitnetvalueList'] = unitnetvalueList
     fundData['netvalueList'] = netvalueList
     # print(fundData.head())
-    fundData.to_csv('a.csv', mode='w')
+    fundData.to_csv(code+'.csv', mode='w')
     print('存储完毕')
 
 if __name__ == '__main__':
-    soup = getSoup(url)
-    saveCsv(soup)
+    # 基金代码
+    # 110022，180012，090013，320010，002001，003188
+    codes = ['110022', '180012', '090013', '320010', '002001', '003188']
+    for code in codes:
+        url = "http://data.funds.hexun.com/outxml/detail/openfundnetvalue.aspx?" \
+            "fundcode=" + code + "&startdate=2018-01-01&enddate=2018-03-31"
+        soup = getSoup(url)
+        saveCsv(soup)
 
 
 

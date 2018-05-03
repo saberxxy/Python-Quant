@@ -6,12 +6,9 @@ import uuid
 import pandas as pd
 import time
 from multiprocessing import Pool
-import uuid
 import os
 import numpy as np
 import cProfile
-
-
 # 导入连接文件
 import sys
 sys.path.append("..")
@@ -19,6 +16,8 @@ import common.GetOracleConn as conn
 
 # 获取全局数据库连接
 cursor = conn.getConfig()
+# 获取连接备用
+cons = ts.get_apis()
 
 
 # 获取所有股票代码
@@ -31,23 +30,21 @@ def getCode():
 
 
 # 获取分钟数据
-def getMinData(cons, codes):
-    print(codes)
-    for i in codes:
-        # 建表
-        if not is_table_exist(i):  # 如果表不存在，先创建表
-            create_table(i)  # 如果表不存在，先建表，再插入数据
-            insertData(cons, i)
-        else:
-            # 存在则判断是否有数据
-            # cursor.execute("truncate table stock_" + i + "_MIN")
-            result = cursor.execute("select count(1) from stock_" + i + "_MIN")
-            for x in result.fetchall():
-                if x[0] < 24000:
-                    insertData(cons, i)
-                else:
-                    print('----------pass----------'+i)
-                    pass
+def getMinData(i):
+    # 建表
+    if not is_table_exist(i):  # 如果表不存在，先创建表
+        create_table(i)  # 如果表不存在，先建表，再插入数据
+        insertData(cons, i)
+    else:
+        # 存在则判断是否有数据
+        result = cursor.execute("select count(1) from stock_" + i + "_MIN")
+        for x in result.fetchall():
+            if x[0] < 24000:
+                cursor.execute("truncate table stock_" + i + "_MIN")
+                insertData(i)
+            else:
+                print('----------pass----------'+i)
+                pass
 
 
 # 将科学记数法化为浮点数
@@ -103,7 +100,7 @@ def create_table(code):
         cursor.execute(i)
 
 #插入数据
-def insertData(cons, i):
+def insertData(i):
     try:
         # 分钟数据, 设置freq参数，分别为1min/5min/15min/30min/60min，D(日)/W(周)/M(月)/Q(季)/Y(年)
         df = ts.bar(i, conn=cons, freq='1min', ma=[5, 10, 20, 60],
@@ -156,20 +153,16 @@ def insertData(cons, i):
                             )
                            )
         cursor.execute("commit")
-        print('------插入数据成功------' + i)
     except Exception:
         pass
 
-def main():
-    # 获取连接备用
-    cons = ts.get_apis()
-    codes = getCode()
-    # print(codes)
-    getMinData(cons, codes)
-
-    # 关闭连接
-    ts.close_apis(cons)
+    print('------插入数据成功------' + i)
 
 
 if __name__ == '__main__':
-    main()
+    codes = getCode()
+    # for i in codes:
+    #     getMinData(i)
+
+    pool = Pool(processes=5)
+    pool.map(getMinData, (i for i in codes))

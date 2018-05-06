@@ -225,7 +225,7 @@ def main2():
 def main():
     time1 = time.time()
     dict = listStock(cursor)
-    pool = Pool(processes=15)  # 设定并发进程的数量
+    pool = Pool(processes=5)  # 设定并发进程的数量
     for key in dict:
         pool.apply_async(getCSV, (key, dict[key],))
 

@@ -98,6 +98,7 @@ def saveInDB(code):
                      )
                   )
     cursor.execute("commit")
+    print('OK')
 
 # 将科学记数法化为浮点数
 def as_num(x):

@@ -14,6 +14,7 @@ import sys
 sys.path.append("..")
 import common.GetOracleConn as conn
 
+
 # 获取全局数据库连接
 cursor = conn.getConfig()
 # 获取连接备用
@@ -26,6 +27,7 @@ def getCode():
     a = cursor.execute("select code from stock_basics")
     for i in a.fetchall():
         codes.append(i[0])
+
     return codes
 
 
@@ -34,13 +36,13 @@ def getMinData(i):
     # 建表
     if not is_table_exist(i):  # 如果表不存在，先创建表
         create_table(i)  # 如果表不存在，先建表，再插入数据
-        insertData(cons, i)
+        insertData(i)
     else:
         # 存在则判断是否有数据
-        result = cursor.execute("select count(1) from stock_" + i + "_MIN")
+        result = cursor.execute("select count(1) from stock_MIN_" + i)
         for x in result.fetchall():
             if x[0] < 24000:
-                cursor.execute("truncate table stock_" + i + "_MIN")
+                cursor.execute("truncate table stock_MIN_" + i)
                 insertData(i)
             else:
                 print('----------pass----------'+i)
@@ -54,7 +56,7 @@ def as_num(x):
 
 # 判断表是否已存在
 def is_table_exist(code):
-    table = "STOCK_" + code + "_MIN"
+    table = "STOCK_MIN_" + code
     sql = "select table_name from user_tables"
     rs = cursor.execute(sql)
     result = rs.fetchall()
@@ -63,7 +65,7 @@ def is_table_exist(code):
 
 # 建表
 def create_table(code):
-    sql = "CREATE TABLE STOCK_" + code + "_MIN" + """
+    sql = "CREATE TABLE STOCK_MIN_" + code + """
     (
             UUID VARCHAR2(80) PRIMARY KEY,
             SDATE DATE,
@@ -82,59 +84,60 @@ def create_table(code):
     """
     cursor.execute(sql)
     # 添加注释
-    comments = ["COMMENT ON TABLE STOCK_" + code + "_MIN" + " IS '" + code + "'",  # 表注释
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".UUID IS 'UUID'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".SDATE IS '日期'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".CODE IS '股票代码'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".OPEN IS '开盘价'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".CLOSE IS '收盘价'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".HIGH IS '最高价'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".LOW IS '最低价'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".VOL IS '成交量'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".AMOUNT IS '成交金额'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".MA5 IS '5个周期平均'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".MA10 IS '10个周期平均'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".MA20 IS '20个周期平均'",
-                "COMMENT ON COLUMN STOCK_" + code + "_MIN" + ".MA60 IS '60个周期平均'"]
+    comments = ["COMMENT ON TABLE STOCK_MIN_" + code + " IS '" + code + "'",  # 表注释
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".UUID IS 'UUID'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".SDATE IS '日期'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".CODE IS '股票代码'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".OPEN IS '开盘价'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".CLOSE IS '收盘价'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".HIGH IS '最高价'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".LOW IS '最低价'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".VOL IS '成交量'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".AMOUNT IS '成交金额'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".MA5 IS '5个周期平均'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".MA10 IS '10个周期平均'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".MA20 IS '20个周期平均'",
+                "COMMENT ON COLUMN STOCK_MIN_" + code + ".MA60 IS '60个周期平均'"]
     for i in comments:
         cursor.execute(i)
 
 #插入数据
 def insertData(i):
-    try:
-        # 分钟数据, 设置freq参数，分别为1min/5min/15min/30min/60min，D(日)/W(周)/M(月)/Q(季)/Y(年)
-        df = ts.bar(i, conn=cons, freq='1min', ma=[5, 10, 20, 60],
-                    start_date='1990-01-01', end_date='')
+    time_1 = time.time()
 
-        dfMin = pd.DataFrame()
-        dfMin['code'] = df['code']
-        dfMin['time'] = df.index
-        # 转浮点数
-        dfMin['open'] = [as_num(x) for x in df['open']]
+    # 分钟数据, 设置freq参数，分别为1min/5min/15min/30min/60min，D(日)/W(周)/M(月)/Q(季)/Y(年)
+    df = ts.bar(i, conn=cons, freq='1min', ma=[5, 10, 20, 60],
+                start_date='1991-01-01', end_date='')
+    # print(df)
+    dfMin = pd.DataFrame()
+    dfMin['code'] = df['code']
+    dfMin['time'] = df.index
+    # 转浮点数
+    dfMin['open'] = [as_num(x) for x in df['open']]
 
-        dfMin['close'] = df['close']
-        dfMin['high'] = df['high']
-        dfMin['low'] = df['low']
-        dfMin['vol'] = df['vol']
-        dfMin['amount'] = df['amount']
-        dfMin['ma5'] = df['ma5']
-        dfMin['ma10'] = df['ma10']
-        dfMin['ma20'] = df['ma20']
-        dfMin['ma60'] = df['ma60']
+    dfMin['close'] = df['close']
+    dfMin['high'] = df['high']
+    dfMin['low'] = df['low']
+    dfMin['vol'] = df['vol']
+    dfMin['amount'] = df['amount']
+    dfMin['ma5'] = df['ma5']
+    dfMin['ma10'] = df['ma10']
+    dfMin['ma20'] = df['ma20']
+    dfMin['ma60'] = df['ma60']
 
-        dfLen = len(dfMin)
-        dfMin['uuid'] = [uuid.uuid1() for l in range(0, dfLen)]  # 添加uuid
+    dfLen = len(dfMin)
+    dfMin['uuid'] = [uuid.uuid1() for l in range(0, dfLen)]  # 添加uuid
 
-        # 处理None
-        dfMin = dfMin.replace('None', 0)
+    # 处理None
+    dfMin = dfMin.replace('None', 0)
 
-        # print(df.head(5))
-        # print(dfMin.head(5))
-
-        for k in range(0, dfLen):
+    # print(df.head(5))
+    # print(dfMin.head(5))
+    for k in range(0, dfLen):
+        try:
             df2 = dfMin[k:k + 1]
-            sql = "insert into stock_" + str(
-                i) + "_min (uuid, sdate, code, open, close, high, low, vol, amount, ma5, ma10, ma20, ma60) " \
+            sql = "insert into stock_MIN_" + str(
+                i) + " (uuid, sdate, code, open, close, high, low, vol, amount, ma5, ma10, ma20, ma60) " \
                      "values(:uuid, to_date(:sdate, 'yyyy-MM-dd hh24:mi:ss'), :code, :open, :close, :high, :low, :vol, :amount, :ma5, :ma10, :ma20, :ma60)"
             cursor.execute(sql,
                            (str(list(df2['uuid'])[0]),
@@ -152,17 +155,23 @@ def insertData(i):
                             round(float(df2['ma60']), 4)
                             )
                            )
-        cursor.execute("commit")
-    except Exception:
-        pass
+        except Exception:
+            pass
 
-    print('------插入数据成功------' + i)
+        cursor.execute("commit")
+
+    time_2 = time.time()
+    print('------插入数据成功------', i, time_2-time_1)
 
 
 if __name__ == '__main__':
     codes = getCode()
+
     # for i in codes:
     #     getMinData(i)
 
-    pool = Pool(processes=5)
-    pool.map(getMinData, (i for i in codes))
+    # try:
+    #     pool = Pool(processes=5)
+    #     pool.map(getMinData, (i for i in codes))
+    # except Exception:
+    #     pass

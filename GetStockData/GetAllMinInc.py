@@ -34,7 +34,7 @@ def getCode():
 def getMinDataInc(cons, codes, systemTime):
     print(codes)
     for i in codes:
-        startTime = cursor.execute("select to_char(max(sdate+1), 'yyyy-MM-dd') from stock_"+i+"_MIN").fetchall()[0][0]
+        startTime = cursor.execute("select to_char(max(sdate+1), 'yyyy-MM-dd') from stock_MIN_" + i).fetchall()[0][0]
         # print(endTime)
         insertDataInc(cons, i, startTime, systemTime)
 
@@ -70,8 +70,8 @@ def insertDataInc(cons, i, startTime, endTime):
 
         for k in range(0, dfLen):
             df2 = dfMin[k:k + 1]
-            sql = "insert into stock_" + str(
-                i) + "_min (uuid, sdate, code, open, close, high, low, vol, amount, ma5, ma10, ma20, ma60) " \
+            sql = "insert into stock_MIN_" + str(
+                i) + " (uuid, sdate, code, open, close, high, low, vol, amount, ma5, ma10, ma20, ma60) " \
                      "values(:uuid, to_date(:sdate, 'yyyy-MM-dd hh24:mi:ss'), :code, :open, :close, :high, :low, :vol, :amount, :ma5, :ma10, :ma20, :ma60)"
             cursor.execute(sql,
                            (str(list(df2['uuid'])[0]),

@@ -14,7 +14,8 @@ sys.path.append('..')
 import common.GetOracleConn as conn
 
 
-def get_stock_data(start_date, end_date):
+def get_stock_data(end_date):
+	start_date = '2018-01-01'
 	time_1 = time.time()
 	cursor = conn.getConfig()
 	sql_1 = "select table_name from user_tables \
@@ -74,18 +75,19 @@ def get_stock_data(start_date, end_date):
 		df_vol = round(float(str(np.average(df['volatility'])).replace('nan', '0')),4)  # 波动率
 		# print(df_stock_name)
 		# 入库
-		insert_db(df_stock_table_name, df_stock_name, df_start_date,
+		insert_db(cursor, df_stock_table_name, df_stock_name, df_start_date,
 			  df_end_date, df_log_rate, df_vol)
 
 		# print(df_stock_table_name, df_stock_name, df_start_date,
 		#  	  df_end_date, df_log_rate, df_vol)
+	cursor.close()
 	time_2 = time.time()
 	print(start_date, end_date, "	OK", time_2-time_1)
 
 
-def insert_db(df_stock_table_name, df_stock_name, df_start_date,
+def insert_db(cursor, df_stock_table_name, df_stock_name, df_start_date,
 			  df_end_date, df_log_rate, df_vol):
-	cursor = conn.getConfig()
+	# cursor = conn.getConfig()
 	# print(df_stock_table_name, df_stock_name, df_start_date,
 	# 	  df_end_date, df_log_rate, df_vol)
 	cursor.execute("insert into stock_return_vol(uuid, stock_table_name, stock_code, start_date, \
@@ -96,7 +98,7 @@ def insert_db(df_stock_table_name, df_stock_name, df_start_date,
 	))
 	cursor.execute("commit")
 
-	cursor.close()
+	# cursor.close()
 
 
 # 生成时间序列
@@ -107,21 +109,24 @@ def datelist(beginDate, endDate):
 
 
 if __name__ == '__main__':
-	# start_date = '2018-01-01'
 	cursor = conn.getConfig()
 	end_date = '2019-01-30'
-	sql_1 = "select max(start_date) from stock_return_vol"
+	sql_1 = "select max(end_date) from stock_return_vol"
 	cursor.execute(sql_1)
-	start_date = str(cursor.fetchall()[0][0])[0:10]
-	if start_date == 'None':
-		start_date='2018-01-01'
+	start_end_date = str(cursor.fetchall()[0][0])[0:10]
+	if start_end_date == 'None':
+		start_end_date='2018-01-01'
 
 	cursor.close()
 
-	end_date_list = datelist(start_date, end_date)
-	for end_date in end_date_list:
-		if start_date != end_date:
-			# print(end_date)
-			get_stock_data(start_date, end_date)
-			# print(start_date, end_date)
+	end_date_list = datelist(start_end_date, end_date)
+
+	# for end_date in end_date_list:
+	# 	if start_end_date != end_date:
+	# 		# print(end_date)
+	# 		get_stock_data(end_date)
+	# 		# print(start_date, end_date)
+
+	pool = Pool(processes = 9)  # 设定并发进程的数量
+	pool.map(get_stock_data, (end_date for end_date in end_date_list))
 

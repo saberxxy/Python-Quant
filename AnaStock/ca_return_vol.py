@@ -6,10 +6,7 @@ import pandas as pd
 import time
 from multiprocessing import Pool
 import uuid
-import os
 import numpy as np
-import re
-import matplotlib.pyplot as plt
 from datetime import datetime
 # 导入连接文件
 import sys
@@ -83,7 +80,7 @@ def get_stock_data(start_date, end_date):
 		# print(df_stock_table_name, df_stock_name, df_start_date,
 		#  	  df_end_date, df_log_rate, df_vol)
 	time_2 = time.time()
-	print("OK", time_2-time_1)
+	print(start_date, end_date, "	OK", time_2-time_1)
 
 
 def insert_db(df_stock_table_name, df_stock_name, df_start_date,
@@ -101,24 +98,30 @@ def insert_db(df_stock_table_name, df_stock_name, df_start_date,
 
 	cursor.close()
 
+
 # 生成时间序列
 def datelist(beginDate, endDate):
 	# beginDate, endDate是形如‘20160601’的字符串或datetime格式
 	date_l = [datetime.strftime(x, '%Y-%m-%d') for x in list(pd.date_range(start=beginDate, end=endDate))]
 	return date_l
 
+
 if __name__ == '__main__':
 	# start_date = '2018-01-01'
 	cursor = conn.getConfig()
 	end_date = '2019-01-30'
-	sql_1 = "select max(end_date) from stock_return_vol"
+	sql_1 = "select max(start_date) from stock_return_vol"
 	cursor.execute(sql_1)
 	start_date = str(cursor.fetchall()[0][0])[0:10]
+	if start_date == 'None':
+		start_date='2018-01-01'
 
 	cursor.close()
 
 	end_date_list = datelist(start_date, end_date)
 	for end_date in end_date_list:
-		# print(end_date)
-		get_stock_data(start_date, end_date)
+		if start_date != end_date:
+			# print(end_date)
+			get_stock_data(start_date, end_date)
+			# print(start_date, end_date)
 

@@ -64,21 +64,23 @@ def create_base_table(end_date):
  			MAS number(10,4), MEV number(10,4), MCN number(10,4), \
  			GMIC number(10,4), TIC number(10,4), COV number(10,4), CORR number(10,4))"
 		sql_4 = "create table stock_mine_result_ok_" + str(end_date).replace('-', '') + \
-			"(ok_stock varchar2(30))"
+			"(ok_1 varchar2(30), ok_2 varchar2(30))"
 		cursor.execute(sql_3)
 		cursor.execute(sql_4)
 		print('建表完毕')
 	else:
 		#不建表
+		print('不用建表')
 		pass
 
 	cursor.close()
-	print('不用建表')
+
 
 
 def ca_mic_corr(table_name_1, table_name_2, start_date, end_date):
-	time_1 = time.time()
+	# time_1 = time.time()
 	cursor = conn.getConfig()
+
 	sql_1 = "select sdate, close " + \
 			" from " + table_name_1 + \
 			" where sdate between to_date('" + start_date + "', 'yyyy-MM-dd')  \
@@ -102,12 +104,9 @@ def ca_mic_corr(table_name_1, table_name_2, start_date, end_date):
 	cov = round(float(dfab.A.cov(dfab.B)), 4)  # 协方差
 	corr = round(float(dfab.A.corr(dfab.B)), 4)  # 相关系数
 
-	# print(mic, mas, mev, mcn, gmic, tic, cov, corr)
 	if math.isnan(corr):
 		pass
 	else:
-		# print(mic, mas, mev, mcn, gmic, tic, cov, corr)
-	# 	print("-----", mic, mas, mev, mcn, gmic, tic, cov, corr)
 		cursor.execute("insert into stock_mine_result_" + str(end_date).replace('-','') + \
 						"(uuid, stock_code_1, stock_table_name_1, stock_code_2, stock_table_name_2, \
 						 mic, mas, mev, mcn, gmic, tic, cov, corr) \
@@ -120,13 +119,11 @@ def ca_mic_corr(table_name_1, table_name_2, start_date, end_date):
 			str(table_name_2),
 			mic, mas, mev, mcn, gmic, tic, cov, corr
 		))
-		cursor.execute("insert into stock_mine_result_ok_" + str(end_date).replace('-','') + \
-			" values('%s')" % (table_name_1))
 		cursor.execute("commit")
-		time_2 = time.time()
+		# time_2 = time.time()
 
-		print(table_name_1, table_name_2, "	OK", time_2 - time_1)
-		cursor.close()
+		# print(table_name_1, table_name_2, "	OK", time_2 - time_1)
+	cursor.close()
 
 
 def return_stats(mine):
@@ -147,25 +144,26 @@ if __name__ == '__main__':
 	# 建表
 	create_base_table(end_date)
 
+	# 查是否已处理
+	cursor = conn.getConfig()
+	sql_1 = "select ok_1, ok_2 from stock_mine_result_ok_" + str(end_date).replace('-', '')
+	cursor.execute(sql_1)
+	ok_list = cursor.fetchall()
+	ok_group_list = []
+	for i in ok_list:
+		ok_group_list.append(str(i[0]) + "_" + str(i[1]))
+
+	print(ok_group_list)
+
+
 	# 两两组合
 	for i in itertools.combinations(res_list, r=2):
 		# 计算相关性并入库
-		ca_mic_corr(i[0], i[1], start_date, end_date)
-		# print(i[0], i[1])
+		if str(i[0])+"_"+str(i[1]) not in ok_group_list:
+			ca_mic_corr(i[0], i[1], start_date, end_date)
+			cursor.execute("insert into stock_mine_result_ok_" + str(end_date).replace('-', '') + \
+				"(ok_1, ok_2) values('%s', '%s')" % (str(i[0]), str(i[1])))
+			cursor.execute(sql_1)
+			cursor.execute("commit")
 
-
-	# a = [1,2,3]
-	# b = [1,2,3]
-	# dfab = pd.DataFrame(np.array([a, b]).T, columns=['A', 'B'])
-	# print(dfab.A.cov(dfab.B))  # 协方差
-	# print(dfab.A.corr(dfab.B))  # 相关系数
-
-
-	# ca_mic(date_time, res_list)
-
-
-
-	# mine = MINE(alpha=0.6, c=15, est="mic_approx")
-	# mine.compute_score([1,2,3], [1,2,3])
-	# print_stats(mine)
 

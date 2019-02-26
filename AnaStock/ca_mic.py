@@ -12,9 +12,11 @@ from minepy import MINE
 import sys
 sys.path.append('..')
 import common.GetOracleConn as conn
+import itertools
+import math
 
 
-def get_stock_data(date_time):
+def get_stock_data(start_date, end_date):
 	cursor = conn.getConfig()
 	sql_1 = "select table_name from user_tables where (table_name like 'STOCK_6%' \
 	          or table_name like 'STOCK_0%' or table_name like 'STOCK_3') \
@@ -26,81 +28,142 @@ def get_stock_data(date_time):
 	for i in res:
 		sql_2 = "select count(*) as my_count " + \
 				" from " + i[0] + \
-				" where sdate >= to_date('" + date_time + "', 'yyyy-MM-dd') "
+				" where sdate between to_date('" + start_date + "', 'yyyy-MM-dd') " + \
+				" and to_date('" + end_date + "', 'yyyy-MM-dd')"
 		cursor.execute(sql_2)
+		# 选取大于250个交易日的股票，否则无法有足够的数据得出结论
 		if cursor.fetchall()[0][0] > 250:
 			res_list.append(i[0])
-
 	cursor.close()
 	return res_list
 
 
-def ca_mic(date_time, res_list):
+# 为存储结果和记录数据建表
+def create_base_table(end_date):
 	cursor = conn.getConfig()
-	for i in res_list:
-		sql_0 = "select * from stock_mine_result_20190201_ok"
-		cursor.execute(sql_0)
-		a = cursor.fetchall()
-		ok_stock = []
-		for j in a:
-			ok_stock.append(j[0])
+	# 首先判断两张表是否存在
+	sql_1 = "select count(*) from user_tables where table_name = \
+		upper('stock_mine_result_" + str(end_date).replace('-','') + "')"
+	cursor.execute(sql_1)
+	a = cursor.fetchall()[0][0]
 
-		time_1 = time.time()
-		if i not in ok_stock:
-			for j in res_list:
-				if i != j:
-					# print(i, j)
-					sql_1 = "select sdate, close " + \
-							" from " + i + \
-							" where sdate >= to_date('" + date_time + "', 'yyyy-MM-dd') "
-					cursor.execute(sql_1)
-					result_1 = pd.DataFrame(cursor.fetchall(), columns=['sdate', 'close_1'])
-					sql_2 = "select sdate, close " + \
-							" from " + j + \
-							" where sdate >= to_date('" + date_time + "', 'yyyy-MM-dd') "
-					cursor.execute(sql_2)
-					result_2 = pd.DataFrame(cursor.fetchall(), columns=['sdate', 'close_2'])
-					x = pd.merge(result_1, result_2, on='sdate', how='inner')
-					mine = MINE(alpha=0.6, c=15, est="mic_approx")
-					mine.compute_score(x['close_1'], x['close_2'])
-					mic, mas, mev, mcn, gmic, tic = return_stats(mine)
-					cursor.execute("insert into stock_mine_result_20190201( \
-									uuid, stock_code_1, stock_table_name_1, stock_code_2, stock_table_name_2, \
-									mic, mas, mev, mcn, gmic, tic) \
-									values ( \
-									'%s', '%s', '%s', '%s', '%s', '%f', '%f', '%f', '%f', '%f', '%f')" % (
-						str(uuid.uuid1()),
-						str(i).replace("STOCK_", ""),
-						str(i),
-						str(j).replace("STOCK_", ""),
-						str(j),
-						round(float(mic), 4),
-						round(float(mas), 4),
-						round(float(mev), 4),
-						round(float(mcn), 4),
-						round(float(gmic), 4),
-						round(float(tic), 4)
-					))
-			# cursor.execute("commit")
-			cursor.execute("insert into stock_mine_result_20190201_ok values('%s')" % (i))
-			cursor.execute("commit")
-			time_2 = time.time()
-			print(i, "	OK", time_2 - time_1)
+	sql_2 = "select count(*) from user_tables where table_name = \
+		upper('stock_mine_result_ok_" + str(end_date).replace('-','') + "')"
+	cursor.execute(sql_2)
+	b = cursor.fetchall()[0][0]
+
+	if a == 0 or b == 0:
+		if a != 0:
+			cursor.execute("drop table stock_mine_result_" +str(end_date).replace('-',''))
+		if b != 0:
+			cursor.execute("drop table stock_mine_result_ok_" + str(end_date).replace('-', ''))
+		# 只要有一张表不存在，重新建两张表
+		sql_3 = "create table stock_mine_result_" +str(end_date).replace('-','')+ \
+ 			" (uuid varchar2(100), stock_code_1 varchar2(20), stock_table_name_1 varchar2(20), \
+ 			stock_code_2 varchar2(20), stock_table_name_2 varchar2(20), MIC number(10,4), \
+ 			MAS number(10,4), MEV number(10,4), MCN number(10,4), \
+ 			GMIC number(10,4), TIC number(10,4), COV number(10,4), CORR number(10,4))"
+		sql_4 = "create table stock_mine_result_ok_" + str(end_date).replace('-', '') + \
+			"(ok_stock varchar2(30))"
+		cursor.execute(sql_3)
+		cursor.execute(sql_4)
+		print('建表完毕')
+	else:
+		#不建表
+		pass
 
 	cursor.close()
+	print('不用建表')
+
+
+def ca_mic_corr(table_name_1, table_name_2, start_date, end_date):
+	time_1 = time.time()
+	cursor = conn.getConfig()
+	sql_1 = "select sdate, close " + \
+			" from " + table_name_1 + \
+			" where sdate between to_date('" + start_date + "', 'yyyy-MM-dd')  \
+			and to_date('" + end_date + "', 'yyyy-MM-dd')"
+	cursor.execute(sql_1)
+	result_1 = pd.DataFrame(cursor.fetchall(), columns=['sdate', 'close_1'])
+	sql_2 = "select sdate, close " + \
+			" from " + table_name_2 + \
+			" where sdate between to_date('" + start_date + "', 'yyyy-MM-dd')  \
+			and to_date('" + end_date + "', 'yyyy-MM-dd')"
+	cursor.execute(sql_2)
+	result_2 = pd.DataFrame(cursor.fetchall(), columns=['sdate', 'close_2'])
+	x = pd.merge(result_1, result_2, on='sdate', how='inner')
+	mine = MINE(alpha=0.6, c=15, est="mic_approx")
+	mine.compute_score(x['close_1'], x['close_2'])
+	# 计算MIC各类指标
+	mic, mas, mev, mcn, gmic, tic = return_stats(mine)
+
+	dfab = pd.DataFrame(np.array([x['close_1'], x['close_2']]).T, columns=['A', 'B'])
+	# 计算协方差及相关系数
+	cov = round(float(dfab.A.cov(dfab.B)), 4)  # 协方差
+	corr = round(float(dfab.A.corr(dfab.B)), 4)  # 相关系数
+
+	# print(mic, mas, mev, mcn, gmic, tic, cov, corr)
+	if math.isnan(corr):
+		pass
+	else:
+		# print(mic, mas, mev, mcn, gmic, tic, cov, corr)
+	# 	print("-----", mic, mas, mev, mcn, gmic, tic, cov, corr)
+		cursor.execute("insert into stock_mine_result_" + str(end_date).replace('-','') + \
+						"(uuid, stock_code_1, stock_table_name_1, stock_code_2, stock_table_name_2, \
+						 mic, mas, mev, mcn, gmic, tic, cov, corr) \
+						 values ('%s', '%s', '%s', '%s', '%s', \
+						 '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f')" % (
+			str(uuid.uuid1()),
+			str(table_name_1).replace("STOCK_", ""),
+			str(table_name_1),
+			str(table_name_2).replace("STOCK_", ""),
+			str(table_name_2),
+			mic, mas, mev, mcn, gmic, tic, cov, corr
+		))
+		cursor.execute("insert into stock_mine_result_ok_" + str(end_date).replace('-','') + \
+			" values('%s')" % (table_name_1))
+		cursor.execute("commit")
+		time_2 = time.time()
+
+		print(table_name_1, table_name_2, "	OK", time_2 - time_1)
+		cursor.close()
 
 
 def return_stats(mine):
 	# mic, mas, mev, mcn, gmic, tic
-	return mine.mic(), mine.mas(), mine.mev(), \
-		mine.mcn(0), mine.gmic(), mine.tic()
-
+	return round(float(mine.mic()), 4), round(float(mine.mas()), 4), \
+		round(float(mine.mev()), 4), round(float(mine.mcn(0)), 4), \
+		round(float(mine.gmic()), 4), round(float(mine.tic()), 4)
 
 
 if __name__ == '__main__':
-	date_time = "2018-01-01"
-	res_list = get_stock_data(date_time)
-	ca_mic(date_time, res_list)
+	# 开始时间
+	start_date = "2018-01-01"
+	# 结束时间，即求取该时间范围内的数据
+	end_date = '2019-02-22'
+	res_list = get_stock_data(start_date, end_date)
+	print(res_list)
+
+	# 建表
+	create_base_table(end_date)
+
+	# 两两组合
+	for i in itertools.combinations(res_list, r=2):
+		# 计算相关性并入库
+		ca_mic_corr(i[0], i[1], start_date, end_date)
+		# print(i[0], i[1])
+
+
+	# a = [1,2,3]
+	# b = [1,2,3]
+	# dfab = pd.DataFrame(np.array([a, b]).T, columns=['A', 'B'])
+	# print(dfab.A.cov(dfab.B))  # 协方差
+	# print(dfab.A.corr(dfab.B))  # 相关系数
+
+
+	# ca_mic(date_time, res_list)
+
+
 
 	# mine = MINE(alpha=0.6, c=15, est="mic_approx")
 	# mine.compute_score([1,2,3], [1,2,3])

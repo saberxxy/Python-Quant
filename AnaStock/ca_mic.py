@@ -78,7 +78,7 @@ def create_base_table(end_date):
 
 
 def ca_mic_corr(table_name_1, table_name_2, start_date, end_date):
-	# time_1 = time.time()
+	time_1 = time.time()
 	cursor = conn.getConfig()
 
 	sql_1 = "select sdate, close " + \
@@ -120,9 +120,9 @@ def ca_mic_corr(table_name_1, table_name_2, start_date, end_date):
 			mic, mas, mev, mcn, gmic, tic, cov, corr
 		))
 		cursor.execute("commit")
-		# time_2 = time.time()
+		time_2 = time.time()
 
-		# print(table_name_1, table_name_2, "	OK", time_2 - time_1)
+		print(table_name_1, table_name_2, "	OK", time_2 - time_1)
 	cursor.close()
 
 
@@ -140,6 +140,7 @@ if __name__ == '__main__':
 	end_date = '2019-02-22'
 	res_list = get_stock_data(start_date, end_date)
 	print(res_list)
+	print(len(res_list))
 
 	# 建表
 	create_base_table(end_date)
@@ -158,6 +159,7 @@ if __name__ == '__main__':
 
 	# 两两组合
 	for i in itertools.combinations(res_list, r=2):
+		# print(i)
 		# 计算相关性并入库
 		if str(i[0])+"_"+str(i[1]) not in ok_group_list:
 			ca_mic_corr(i[0], i[1], start_date, end_date)

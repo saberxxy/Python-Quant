@@ -34,7 +34,7 @@ def saveInDB(code):
 
 	# 先删后插
 	x = my_set.delete_many({})
-	print(x.deleted_count, "个文档已删除")
+	print(x.deleted_count, "条记录已删除")
 
 
 	# 解析CSV文件并数据清洗

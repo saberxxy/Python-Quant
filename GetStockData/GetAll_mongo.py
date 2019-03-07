@@ -75,7 +75,7 @@ def save_db(code):
 
 	# 先删后插
 	x = my_set.delete_many({})
-	print(x.deleted_count, "条记录已删除")
+	# print(x.deleted_count, "条记录已删除")
 
 	for k in range(0, dfLen):
 		df2 = df[k:k + 1]
@@ -126,6 +126,7 @@ def as_num(x):
 
 # 通过网易财经获取全量数据的CSV文件
 def getCSV(code, url):
+	time_1 = time.time()
 	fordername = 'AllStockData\\'
 	filename = str(code) + '.CSV'
 	with request.urlopen(url) as web:
@@ -133,12 +134,15 @@ def getCSV(code, url):
 		with open(fordername+filename, 'wb') as outfile:
 			outfile.write(web.read())
 
-	save_db(code)
+	time_2 = time.time()
+	print(code, "	获取完毕", time_2-time_1)
+
+	# save_db(code)
 	# print(code)
 
 
-# 单进程
-def main2():
+# 单进程获取股票信息
+def s_get_csv():
 	dict = listStock()
 	print(dict)
 
@@ -147,10 +151,20 @@ def main2():
 		getCSV(key, dict[key])
 
 
-# 多进程
-def main():
+# 单进程入库
+def s_import_data():
 	dict = listStock()
-	pool = Pool(processes = 5)  # 设定并发进程的数量
+	print(dict)
+
+	# 空出获取数据的函数
+	for key in dict:
+		save_db(key)
+
+
+# 多进程获取股票信息
+def m_get_csv():
+	dict = listStock()
+	pool = Pool(processes = 3)  # 设定并发进程的数量
 	for key in dict:
 		pool.apply_async(getCSV, (key, dict[key],))
 
@@ -158,6 +172,25 @@ def main():
 	pool.join()
 
 
+# 多进程入库
+def m_imprt_data():
+	dict = listStock()
+	pool = Pool(processes=3)  # 设定并发进程的数量
+	for key in dict:
+		pool.apply_async(save_db, (key,))
+
+	pool.close()
+	pool.join()
+
+
+
+
+
 if __name__ == '__main__':
-	main()
+	m_get_csv()
+	# m_imprt_data()
+
+	# s_get_csv()
+	# s_import_data()
+
 

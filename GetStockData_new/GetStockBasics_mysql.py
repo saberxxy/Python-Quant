@@ -91,6 +91,7 @@ def main():
                 delist_date_db, is_hs_db ))
     cursor.execute("commit")
     time_2 = time.time()
+    cursor.close()
     print("插入完毕", time_2-time_1)
 
 

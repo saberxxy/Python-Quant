@@ -3,6 +3,7 @@
 
 import pandas as pd
 import time
+import datetime
 import uuid
 import os
 import numpy as np
@@ -23,7 +24,7 @@ def get_cursor():
 	return cursor
 
 
-def ca_coin(cursor, table_name_1, table_name_2, start_date, end_date):
+def ca_coin(date_diff, cursor, table_name_1, table_name_2, start_date, end_date):
 
 	sql_1 = "select distinct sdate, close as close_1 " + \
 			" from stock." + table_name_1 + \
@@ -41,10 +42,14 @@ def ca_coin(cursor, table_name_1, table_name_2, start_date, end_date):
 	b = cursor.fetchall()
 	result_2 = pd.DataFrame(list(b), columns=['sdate', 'close_2'])
 	x = pd.merge(result_1, result_2, on='sdate', how='inner')
-	if len(x) >= 250:
+
+	# 如果所获取的数据，大于时间差的一半的量，则可用于计算
+	if len(x) >= int(date_diff)*0.5:
 		result = sm.tsa.stattools.coint(x['close_1'], x['close_2'])
 		if result[1] < 0.05:
-			cursor.execute("insert into stock.stock_coin_result_" + str(end_date).replace('-','') + \
+			cursor.execute("insert into stock.stock_coin_result_" \
+						   + str(start_date).replace('-','') + """_"""
+						   + str(end_date).replace('-','') + \
 							"(uuid, stock_code_1, stock_table_name_1, stock_code_2, stock_table_name_2, \
 							 p_value) \
 							 values ('%s', '%s', '%s', '%s', '%s', '%s')" % (
@@ -77,17 +82,19 @@ def get_stock_data(cursor, start_date, end_date):
 
 
 # 为存储结果和记录数据建表
-def create_base_table(cursor, end_date):
+def create_base_table(cursor, start_date, end_date):
 	# 首先判断两张表是否存在
 	sql_1 = """select table_name from information_schema.`TABLES` a
 	           where a.table_schema='stock' and a.table_name = \'stock_coin_result_"""  \
+			+ str(start_date).replace('-','') + """_""" \
 			+ str(end_date).replace('-','') + """\'"""
 	cursor.execute(sql_1)
 	a = len(cursor.fetchall())
 	print(a)
 
 	sql_2 = """select table_name from information_schema.`TABLES` a
-	           where a.table_schema='stock' and a.table_name = \'stock_coin_result_ok_"""  \
+	           where a.table_schema='stock' and a.table_name = \'stock_coin_result_ok_""" \
+			+ str(start_date).replace('-', '') + """_""" \
 			+ str(end_date).replace('-','') + """\'"""
 	cursor.execute(sql_2)
 	b = len(cursor.fetchall())
@@ -95,15 +102,24 @@ def create_base_table(cursor, end_date):
 
 	if a == 0 or b == 0:
 		if a != 0:
-			cursor.execute("drop table stock.stock_coin_result_" +str(end_date).replace('-',''))
+			cursor.execute("""drop table stock.stock_coin_result_"""
+						   + str(start_date).replace('-', '') + """_"""
+						   + str(end_date).replace('-',''))
 		if b != 0:
-			cursor.execute("drop table stock.stock_coin_result_ok_" + str(end_date).replace('-', ''))
+			cursor.execute("""drop table stock.stock_coin_result_ok_"""
+						   + str(start_date).replace('-', '') + """_"""
+						   + str(end_date).replace('-', ''))
 		# 只要有一张表不存在，重新建两张表
-		sql_3 = "create table stock.stock_coin_result_" +str(end_date).replace('-','')+ \
- 			" (uuid varchar(100), stock_code_1 varchar(20), stock_table_name_1 varchar(20), \
- 			stock_code_2 varchar(20), stock_table_name_2 varchar(20), p_value float(20))"
-		sql_4 = "create table stock.stock_coin_result_ok_" + str(end_date).replace('-', '') + \
-			"(ok_1 varchar(30), ok_2 varchar(30))"
+		sql_3 = """create table stock.stock_coin_result_""" \
+				+ str(start_date).replace('-', '') + """_""" \
+				+ str(end_date).replace('-','') \
+ 			 + """ (uuid varchar(100), stock_code_1 varchar(20), stock_table_name_1 varchar(20), 
+ 			stock_code_2 varchar(20), stock_table_name_2 varchar(20), p_value float(20))"""
+
+		sql_4 = """create table stock.stock_coin_result_ok_""" \
+				+ str(start_date).replace('-', '') + """_""" \
+				+ str(end_date).replace('-', '') \
+			+ """(ok_1 varchar(30), ok_2 varchar(30))"""
 		cursor.execute(sql_3)
 		cursor.execute(sql_4)
 		print('建表完毕')
@@ -113,24 +129,31 @@ def create_base_table(cursor, end_date):
 		pass
 
 
-if __name__ == '__main__':
-	# cursor = get_cursor()
-	# ca_coin(cursor, "stock_000012", "stock_600758", "2019-01-01", "2019-02-28")
+# 计算日期的天数差
+def cal_time(date1, date2):
+	day1 = time.strptime(str(date1), '%Y-%m-%d')
+	day2 = time.strptime(str(date2), '%Y-%m-%d')
+
+	day_num = (int(time.mktime(day2)) - int(time.mktime(day1))) / (
+				24 * 60 * 60)
+	return abs(int(day_num))
+
+
+def main(date_diff, start_date, end_date):
 
 	cursor = get_cursor()
-	# 开始时间
-	start_date = "2018-01-01"
-	# 结束时间，即求取该时间范围内的数据
-	end_date = '2019-02-28'
+
 	res_list = get_stock_data(cursor, start_date, end_date)
 	print(res_list)
 	print(len(res_list))
 
 	# 建表
-	create_base_table(cursor, end_date)
+	create_base_table(cursor, start_date, end_date)
 
 	# 查是否已处理
-	sql_1 = "select ok_1, ok_2 from stock.stock_coin_result_ok_" + str(end_date).replace('-', '')
+	sql_1 = """select ok_1, ok_2 from stock.stock_coin_result_ok_""" \
+			+ str(start_date).replace('-', '') + """_""" \
+			+ str(end_date).replace('-', '')
 	cursor.execute(sql_1)
 	ok_list = cursor.fetchall()
 	ok_group_list = []
@@ -146,15 +169,29 @@ if __name__ == '__main__':
 		# 计算相关性并入库
 		if len(ok_group_list) != 0:
 			if str(i[0]) + "_" + str(i[1]) not in ok_group_list:
-				ca_coin(cursor, i[0], i[1], start_date, end_date)
-				cursor.execute("insert into stock.stock_coin_result_ok_" + str(end_date).replace('-', '') + \
+				ca_coin(date_diff, cursor, i[0], i[1], start_date, end_date)
+				cursor.execute("insert into stock.stock_coin_result_ok_" \
+							   + str(start_date).replace('-', '') + """_"""
+							   + str(end_date).replace('-', '') + \
 							   "(ok_1, ok_2) values('%s', '%s')" % (str(i[0]), str(i[1])))
 				cursor.execute(sql_1)
 				cursor.execute("commit")
 		else:
-			ca_coin(cursor, i[0], i[1], start_date, end_date)
-			cursor.execute("insert into stock.stock_coin_result_ok_" + str(end_date).replace('-', '') + \
+			ca_coin(date_diff, cursor, i[0], i[1], start_date, end_date)
+			cursor.execute("insert into stock.stock_coin_result_ok_" \
+						   + str(start_date).replace('-', '') + """_""" \
+						   + str(end_date).replace('-', '') + \
 						   "(ok_1, ok_2) values('%s', '%s')" % (str(i[0]), str(i[1])))
 			cursor.execute(sql_1)
 			cursor.execute("commit")
 
+
+if __name__ == '__main__':
+	# main()
+	# 开始时间
+	start_date = "2018-09-01"
+	# 结束时间，即求取该时间范围内的数据
+	end_date = '2019-02-28'
+	date_diff = cal_time(start_date, end_date)
+
+	main(date_diff, start_date, end_date)

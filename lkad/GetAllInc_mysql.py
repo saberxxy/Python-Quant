@@ -51,6 +51,7 @@ def getTable():
     maxDateList = []
     for i in tableNameList:
         sqlStr = "SELECT DATE_FORMAT(max(DATE),'%Y%m%d') as maxdate FROM "+ i
+        print(sqlStr)
         cursor.execute(sqlStr)
  
         maxDate = cursor.fetchone()["maxdate"]
@@ -79,7 +80,7 @@ def getCSV(code, url):
     fordername = 'AllStockDataInc'
     filename = str(code) + '.CSV'
     if not os.path.isdir(fordername):
-        print("mkdir")
+        #print("mkdir")
         os.mkdir(fordername)
 
     with request.urlopen(url) as web:
@@ -199,7 +200,7 @@ def main():
         #    print(e
    #获取下载链接和股票代码 
     valid_code_url=return_valid_code_url()
-    pool=Pool(processes=24)
+    pool=Pool(processes=3)
     for c,u in valid_code_url:
         pool.apply_async(getCSV,(c,u,))
 

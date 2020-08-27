@@ -52,15 +52,18 @@ def listStock(cursor):
 def getCSV(code, url):
     fordername = 'AllStockData'
     filename = str(code) + '.CSV'
+    fullfilename = fordername+os.path.sep+filename
     if not os.path.isdir(fordername):
-        print("mkdir")
+         #print("mkdir")
         os.mkdir(fordername)
-    with request.urlopen(url) as web:
-        # 为防止编码错误，使用二进制写文件模式
-        print(web)
-        with open(fordername+os.path.sep+filename, 'wb') as outfile:
-            outfile.write(web.read())
-            print("write OK "+str(code))
+    if not os.path.exists(fullfilename):
+        with request.urlopen(url) as web:
+          # 为防止编码错误，使用二进制写文件模式
+              # print(web)
+            with open(fullfilename, 'wb') as outfile:
+                outfile.write(web.read())
+                print("csvfile download OK "+str(code))
+
     #print("id1")
     
     #print(id(cursor))
@@ -69,19 +72,19 @@ def getCSV(code, url):
     #print("Id2")
    # print(id(cursor))
     saveInDB(code,cursor)
-    
-    print("一只股票入库完毕")
-    # 删除CSV文件
-    os.remove(fordername+filename)
+    cursor.close()  
+    print("一只股票入库完毕",code)
+    # 删除CSV文件,如果需要保留，直接注释即可，适合网络状态不太好的时候。
+    os.remove(fullfilename)
 
 # 将获取的数据入库
 def saveInDB(code,cursor):
     # 建表
     if not is_table_exist(code,cursor):  # 如果表不存在，先创建表
-        #print("not_exist")
+        #print(cursor,"not_exist")
         create_table(code,cursor)  # 如果表不存在，先建表
     else:  # 存在则截断
-        #print("exist")
+        #print(cursor,"exist")
         cursor.execute("truncate table stock_" + code)
         cursor.execute("commit")
 
@@ -214,7 +217,7 @@ def get_type(code):
     return switcher.get(code_pre, '未知')
 
 # 建表
-def create_table(code):
+def create_table(code,cursor):
     sql = "CREATE TABLE stock_" + code + """
     (
             UUID VARCHAR(80) PRIMARY KEY,
@@ -289,7 +292,7 @@ if __name__ == '__main__':
 #=======================================================
     time1 = time.time()
     dict = listStock(cursor)
-    pool = Pool(processes = 24)  # 设定并发进程的数量
+    pool = Pool(processes = 10)  # 设定并发进程的数量
     for key in dict:
         pool.apply_async(main, (key, dict[key], ))
 

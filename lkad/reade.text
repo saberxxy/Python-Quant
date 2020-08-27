@@ -1,0 +1,8 @@
+使用说明请看这里：
+    lkad下面是mysql数据库的代码，使用方法如下：
+    安装依赖 pip3 install  -r requirement.txt 
+    然后运行建表语句：mysql -uroot -P <createtables_mysql.sql
+    注意，如果数据库和运行环境不在同一台主机上，自己进去../config/config.conf里面改配置。
+    然后获取基本信息表的数据: python3 GetStockBasics_mysql.py
+    完成后获取全量信息：python3 GetAll_mysql.py 获取全量信息可以自己改线程数，默认为10个。这个全量信息比较大，需要2-3个小时才能跑完，所占用数据库的空间也比较大，大概有15G左右。
+    每日增量信息获取 ： python3 GetAllInc_mysql.py

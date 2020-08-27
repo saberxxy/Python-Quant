@@ -46,7 +46,7 @@ profits_yoy decimal(20, 4) comment '净利润同比(%)' ,
 distrib varchar(50) comment '分配方案' ,
 report_date date comment  '发布日期' ,
 year varchar(5) comment '年份' ,
-quarter varchar(2)  '季度'
+quarter varchar(2) comment '季度'
 ) comment '业绩报告表';
 
 
